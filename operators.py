@@ -84,9 +84,22 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
     bl_region_type = 'WINDOW'
     bl_options = {'REGISTER', 'UNDO'}
 
-    replace_shapekeys: bpy.props.BoolProperty(name='Replace Shapekeys', default=False)
-    falloff: bpy.props.FloatProperty(name='Interpolation Falloff', default=4, min=2, max=14)
-    strength: bpy.props.FloatProperty(name='Strength', default=1, min=-100, max=100)
+    replace_shapekeys: bpy.props.BoolProperty(
+        name='!Replace Shapekeys',
+        description='If it is ON, and target mesh have shape key with the same names as source'
+            ' mesh they will be replaced. Be carefull with the checkbox because the key shape data '
+            'may be lost irrecoverably.',
+            default=False
+        )
+    falloff: bpy.props.FloatProperty(
+        name='Interpolation Falloff',
+        description='Surface Deform modifier property',
+        default=4, min=2, max=14)
+    strength: bpy.props.FloatProperty(
+        name='Strength',
+        description='Surface Deform modifier property',
+        default=1, min=-100, max=100
+        )
 
     def invoke(self, context, event):
         return self.execute(context)
