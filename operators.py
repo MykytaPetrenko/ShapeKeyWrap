@@ -15,7 +15,7 @@ def skw_transfer_shapekeys(self, context):
         if obj is active:
             continue
 
-        deformer = obj.modifiers.new(name='JUST_FOR_TEST', type='SURFACE_DEFORM')
+        deformer = obj.modifiers.new(name='surface defrom', type='SURFACE_DEFORM')
         deformer.target = active
         bpy.ops.object.modifier_move_to_index(
             {"object" : obj},
