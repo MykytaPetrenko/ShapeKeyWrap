@@ -50,8 +50,9 @@ def skw_transfer_shapekeys(self, context):
             active.active_shape_key_index = i
             sk = active.active_shape_key
             deformer.name = sk.name
-            if sk.name in target_obj.data.shape_keys.key_blocks.keys():
-                sk_index = target_obj.data.shape_keys.key_blocks.keys().index(sk.name)
+            target_sks = target_obj.data.shape_keys
+            if target_sks is not None and sk.name in target_sks.key_blocks.keys():
+                sk_index = target_sks.key_blocks.keys().index(sk.name)
                 target_obj.active_shape_key_index = sk_index
                 bpy.ops.object.shape_key_remove({"object" : target_obj})
             bpy.ops.object.modifier_apply_as_shapekey(
