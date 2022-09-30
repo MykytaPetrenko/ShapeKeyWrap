@@ -9,7 +9,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
     bl_label = 'Shape Key Wrap'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'SKW'
+    bl_category = 'Tools'
     bl_context = 'objectmode'
 
     def draw(self, context):                
