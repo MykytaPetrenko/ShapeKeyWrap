@@ -4,6 +4,22 @@ import bpy
 def skw_transfer_shapekeys(self, context):
     active = context.active_object
     selected = context.selected_objects
+
+    # Validation
+    if active is None or len(selected) <= 1:
+        self.report({'ERROR'}, 'Invalid objects selection')
+        return
+    if active.type != 'MESH':
+        self.report({'ERROR'}, f'Valid source (active) object type is "MESH". "{active.name}" type is "{active.type}"')
+        return
+    for obj in selected:
+        if obj.type != 'MESH':
+            self.report({'ERROR'}, f'Valid target object type is "MESH". "{obj.name}" type is "{obj.type}"')
+            return
+    if active.data.shape_keys is None:
+        self.report({'ERROR'}, f'Source (active) object "{obj.name}" does not have shape keys.')
+        return
+
     show_only_shape_key = active.show_only_shape_key
     active_shape_key_index = active.active_shape_key_index
     active.active_shape_key_index = 0
