@@ -1,8 +1,7 @@
 import bpy
-import bmesh
 
 
-def transfer_shapekeys(self, context):
+def skw_transfer_shapekeys(self, context):
     active = context.active_object
     selected = context.selected_objects
     show_only_shape_key = active.show_only_shape_key
@@ -36,7 +35,6 @@ def transfer_shapekeys(self, context):
                 keep_modifier=True,
                 modifier=deformer.name, report=False
             )
-            print(sk.name)
         active.active_shape_key_index = 0
         obj.modifiers.remove(deformer)
 
@@ -44,8 +42,8 @@ def transfer_shapekeys(self, context):
     active.show_only_shape_key = show_only_shape_key
 
 
-class FSEAL_OT_transfer_shapekeys(bpy.types.Operator):
-    bl_idname = "shapekey_transfer.transfer"
+class SKW_OT_transfer_shape_keys(bpy.types.Operator):
+    bl_idname = "shape_key_wrap.transfer"
     bl_label = "Transfer from Active"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
@@ -58,5 +56,22 @@ class FSEAL_OT_transfer_shapekeys(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
-        transfer_shapekeys(self, context)
+        skw_transfer_shapekeys(self, context)
         return {'FINISHED'}
+
+
+CLASSES = [SKW_OT_transfer_shape_keys]
+
+
+def register():
+    for c in CLASSES:
+        bpy.utils.register_class(c)  
+
+
+def unregister():
+    for c in CLASSES:
+        bpy.utils.unregister_class(c)
+
+
+if __name__ == '__main__':
+    register()

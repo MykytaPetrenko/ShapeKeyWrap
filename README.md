@@ -1,5 +1,5 @@
 # ShapeKeyWrap
-Blender addon for transfering shapekeys from on mesh to another one. There is another free addon that do almost the same, but algorythm is different (you may check it here https://github.com/fblah/ShapeKeyTransferBlender), but sometimes it does not work properly. So write my own addon. It is very fast and simple (around a hundred lines of code).
+Blender addon for transfering shapekeys from on mesh to another one. There is another free addon that do almost the same with another algorythm (you may check it here https://github.com/fblah/ShapeKeyTransferBlender), but sometimes it does not work properly. So have writen my own addon. It is very fast and simple (around a hundred lines of code).
 
 # How to apply
 1) Select target meshes
