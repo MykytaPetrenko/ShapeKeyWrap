@@ -9,5 +9,4 @@ Blender addon for transfering shapekeys from on mesh to another one. There is an
 4) Adjust parameters if something goes wrong (most of the parameters are the parameters of surface deform modifier, the addon is based on it).
 
 
-If you liked the addon, visit my gumroad page. I will add here more addons.
-https://squeezyweasel.gumroad.com/l/shapekeywrap
+If you liked the addon, visit my [youtube channel](https://www.youtube.com/channel/UCK95ry5O6RvofrR6qs5aBZA) and  [gumroad page](https://squeezyweasel.gumroad.com/l/shapekeywrap)
