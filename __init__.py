@@ -1,6 +1,7 @@
 import bpy
-from . import panel
-from . import operators
+from . import skw_panel
+from . import skw_operators
+from . import skw_props
 
 
 bl_info = {
@@ -15,7 +16,7 @@ bl_info = {
     'category': 'Mesh'
 }
 
-MODULES = [panel, operators]
+MODULES = [skw_panel, skw_operators, skw_props]
 
 
 def register():
