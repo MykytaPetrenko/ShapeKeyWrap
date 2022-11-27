@@ -77,9 +77,34 @@ def skw_transfer_shapekeys(self, context):
     active.show_only_shape_key = active_obj_show_only_shape_key
 
 
+def skw_poll_transfer_shapekeys(context):
+    active = context.active_object
+    if active is None:
+        return False, 'Invalid source object'
+    if active.type != 'MESH':
+        return False, 'Non-mesh object is active'
+    if active.data.shape_keys is None or len(active.data.shape_keys.key_blocks) <= 1:
+        return False, 'Insufficient number of shapekeys'
+
+    if len(context.selected_objects) < 2:
+        return False, 'No target object selected'
+    obj_count = 0
+    obj_name = ''
+    for obj in context.selected_objects:
+        if obj.type != 'MESH':
+            return False, 'Non-mesh object is selected'
+        elif obj is not active:
+            obj_count += 1
+            obj_name = obj.name
+    if obj_count == 1:
+        return True, f'From: {active.name}\nTo: {obj_name}'
+    else:
+        return True, f'From: {active.name}\nTo: {obj_count} other objects'
+
+
 class SKW_OT_transfer_shape_keys(bpy.types.Operator):
     bl_idname = "shape_key_wrap.transfer"
-    bl_label = "Transfer from Active"
+    bl_label = "Transfer"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_options = {'REGISTER', 'UNDO'}
@@ -100,6 +125,11 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
         description='Surface Deform modifier property',
         default=1, min=-100, max=100
         )
+
+    @classmethod
+    def poll(cls, context):
+        result, _ = skw_poll_transfer_shapekeys(context)
+        return result
 
     def invoke(self, context, event):
         return self.execute(context)
