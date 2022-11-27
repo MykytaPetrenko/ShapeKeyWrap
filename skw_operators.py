@@ -1,5 +1,3 @@
-from email.policy import default
-from unicodedata import name
 import bpy
 
 
