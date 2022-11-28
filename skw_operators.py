@@ -1,25 +1,39 @@
 import bpy
 
 
-def skw_transfer_shapekeys(self, context):
+REFRESH_LIST_OPTION = [
+    ('REFRESH', 'Refresh', '', 0),
+    ('CHECK_ALL', 'Check All', '', 1),
+    ('UNCHECK_ALL', 'Uncheck All', '', 2)    
+]
+
+
+
+def skw_transfer_shape_keys(self, context):
     props = self.properties
     active = context.active_object
     selected = context.selected_objects
 
-    # Validation
-    if active is None or len(selected) <= 1:
-        self.report({'ERROR'}, 'Invalid objects selection')
-        return
-    if active.type != 'MESH':
-        self.report({'ERROR'}, f'Valid source (active) object type is "MESH". "{active.name}" type is "{active.type}"')
-        return
-    for obj in selected:
-        if obj.type != 'MESH':
-            self.report({'ERROR'}, f'Valid target object type is "MESH". "{obj.name}" type is "{obj.type}"')
-            return
-    if active.data.shape_keys is None:
-        self.report({'ERROR'}, f'Source (active) object "{obj.name}" does not have shape keys.')
-        return
+    skw_prop = active.data.skw_prop
+    transfer_list = list()
+    for item in skw_prop.shape_keys_to_transfer:
+        if item.checked:
+            transfer_list.append(item.name)
+
+    # Validation (Now it is done via poll classmethod)
+    # if active is None or len(selected) <= 1:
+    #     self.report({'ERROR'}, 'Invalid objects selection')
+    #     return
+    # if active.type != 'MESH':
+    #     self.report({'ERROR'}, f'Valid source (active) object type is "MESH". "{active.name}" type is "{active.type}"')
+    #     return
+    # for obj in selected:
+    #     if obj.type != 'MESH':
+    #         self.report({'ERROR'}, f'Valid target object type is "MESH". "{obj.name}" type is "{obj.type}"')
+    #         return
+    # if active.data.shape_keys is None:
+    #     self.report({'ERROR'}, f'Source (active) object "{obj.name}" does not have shape keys.')
+    #     return
 
     active_obj_show_only_shape_key = active.show_only_shape_key
     active_obj_active_shape_key_index = active.active_shape_key_index
@@ -52,6 +66,8 @@ def skw_transfer_shapekeys(self, context):
         for i in range(1, num_sk):
             active.active_shape_key_index = i
             sk = active.active_shape_key
+            if sk.name not in transfer_list:
+                continue
             deformer.name = sk.name
             if props.replace_shapekeys:
                 target_sks = target_obj.data.shape_keys
@@ -133,11 +149,38 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
-        skw_transfer_shapekeys(self, context)
+        skw_transfer_shape_keys(self, context)
         return {'FINISHED'}
 
 
-CLASSES = [SKW_OT_transfer_shape_keys]
+class SKW_OT_refresh_shape_keys(bpy.types.Operator):
+    bl_idname = "shape_key_wrap.refresh_list"
+    bl_label = "Refresh"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'WINDOW'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    action: bpy.props.EnumProperty(items=REFRESH_LIST_OPTION, options={'HIDDEN'})
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.type == 'MESH'
+
+    def invoke(self, context, event):
+        return self.execute(context)
+
+    def execute(self, context):
+        mesh = context.active_object.data
+        if self.action == 'REFRESH':
+            mesh.skw_prop.refresh_shape_keys(mesh, default=None)
+        elif self.action == 'CHECK_ALL':
+            mesh.skw_prop.refresh_shape_keys(mesh, default=True)
+        elif self.action == 'UNCHECK_ALL':
+            mesh.skw_prop.refresh_shape_keys(mesh, default=False)
+        return {'FINISHED'}
+
+
+CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys]
 
 
 def register():
