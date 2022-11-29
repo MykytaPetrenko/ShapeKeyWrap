@@ -41,13 +41,10 @@ class SKT_PT_object_mode(bpy.types.Panel):
         if active and active.type == 'MESH':
             mesh = active.data
             skw = mesh.skw_prop
+            layout.prop(skw, 'transfer_by_list', text='Transfer By The List', toggle=True)
             col = layout.column(align=True)
-
-            col.prop(skw, 'transfer_all', text='Transfer All', emboss=False)
-            row = col.row()
-            
-            
-            row.template_list(
+            col.enabled = skw.transfer_by_list
+            col.template_list(
                 'SKT_UL_items', '',
                 skw, 'shape_keys_to_transfer',
                 skw, 'shape_key_index',

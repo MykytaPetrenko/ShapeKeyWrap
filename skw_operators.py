@@ -14,11 +14,12 @@ def skw_transfer_shape_keys(self, context):
     active = context.active_object
     selected = context.selected_objects
 
-    skw_prop = active.data.skw_prop
+    skw = active.data.skw_prop
     transfer_list = list()
-    for item in skw_prop.shape_keys_to_transfer:
-        if item.checked:
-            transfer_list.append(item.name)
+    if skw.transfer_by_list:
+        for item in skw.shape_keys_to_transfer:
+            if item.checked:
+                transfer_list.append(item.name)
 
     # Validation (Now it is done via poll classmethod)
     # if active is None or len(selected) <= 1:
@@ -66,7 +67,7 @@ def skw_transfer_shape_keys(self, context):
         for i in range(1, num_sk):
             active.active_shape_key_index = i
             sk = active.active_shape_key
-            if sk.name not in transfer_list:
+            if skw.transfer_by_list and sk.name not in transfer_list:
                 continue
             deformer.name = sk.name
             if props.replace_shapekeys:
@@ -122,16 +123,18 @@ def skw_transfer_shape_key_values(self, context):
     active = context.active_object
     selected = context.selected_objects
 
-    skw_prop = active.data.skw_prop
+    skw = active.data.skw_prop
     transfer_list = list()
-    for item in skw_prop.shape_keys_to_transfer:
-        if item.checked:
-            transfer_list.append(item.name)
+    if skw.transfer_by_list:
+        for item in skw.shape_keys_to_transfer:
+            if item.checked:
+                transfer_list.append(item.name)
 
     values = dict()
     for sk in active.data.shape_keys.key_blocks:
-        if sk.name in transfer_list:
-            values[sk.name] = sk.value
+        if skw.transfer_by_list and sk.name not in transfer_list:
+            continue
+        values[sk.name] = sk.value
 
     for target_obj in selected:
         if target_obj is active or target_obj.data.shape_keys is None:
