@@ -57,7 +57,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shapes', icon='ARROW_LEFTRIGHT')
+        col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shape Keys', icon='ARROW_LEFTRIGHT')
         col.operator(SKW_OT_transfer_shape_key_values.bl_idname, text='Transfer Values', icon='ARROW_LEFTRIGHT')
 
 
