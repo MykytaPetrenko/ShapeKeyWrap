@@ -1,12 +1,17 @@
 import bpy
-from .skw_operators import SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys, skw_poll_transfer_shapekeys
+from .skw_operators import (
+    SKW_OT_transfer_shape_keys,
+    SKW_OT_refresh_shape_keys,
+    SKW_OT_transfer_shape_key_values,
+    skw_poll_transfer_shapekeys
+)
 
 
 class SKT_UL_items(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row()
-        row.label(text=item.name)
-        row.prop(item, 'checked', text='')        
+        row.label(text=item.name, icon='SHAPEKEY_DATA')
+        row.prop(item, 'checked', text='')
 
 
 class SKT_PT_object_mode(bpy.types.Panel):
@@ -34,15 +39,18 @@ class SKT_PT_object_mode(bpy.types.Panel):
         active = context.active_object
         
         if active and active.type == 'MESH':
-            col = layout.column(align=True)
-            col.label(text='SKs to tranfer:')
-            row = col.row()
             mesh = active.data
-            exceptions = mesh.skw_prop
+            skw = mesh.skw_prop
+            col = layout.column(align=True)
+
+            col.prop(skw, 'transfer_all', text='Transfer All', emboss=False)
+            row = col.row()
+            
+            
             row.template_list(
                 'SKT_UL_items', '',
-                exceptions, 'shape_keys_to_transfer',
-                exceptions, 'shape_key_index',
+                skw, 'shape_keys_to_transfer',
+                skw, 'shape_key_index',
                 rows=5
             )
             col.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Refresh').action = 'REFRESH'
@@ -50,8 +58,10 @@ class SKT_PT_object_mode(bpy.types.Panel):
             row.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Check All').action = 'CHECK_ALL'
             row.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Uncheck All').action = 'UNCHECK_ALL'
 
-        row = layout.row()
-        row.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer', icon='ARROW_LEFTRIGHT')
+        box = layout.box()
+        col = box.column(align=True)
+        col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shapes', icon='ARROW_LEFTRIGHT')
+        col.operator(SKW_OT_transfer_shape_key_values.bl_idname, text='Transfer Values', icon='ARROW_LEFTRIGHT')
 
 
 classes = [SKT_PT_object_mode, SKT_UL_items]

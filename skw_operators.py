@@ -81,6 +81,8 @@ def skw_transfer_shape_keys(self, context):
                 keep_modifier=True,
                 modifier=deformer.name, report=False
             )
+            target_sk = target_obj.data.shape_keys.key_blocks[-1]
+            target_sk.value = sk.value
         active.active_shape_key_index = 0
 
         target_obj.active_shape_key_index = target_obj_active_shape_key_index
@@ -114,6 +116,29 @@ def skw_poll_transfer_shapekeys(context):
         return True, f'From: {active.name}\nTo: {obj_name}'
     else:
         return True, f'From: {active.name}\nTo: {obj_count} other objects'
+
+
+def skw_transfer_shape_key_values(self, context):
+    active = context.active_object
+    selected = context.selected_objects
+
+    skw_prop = active.data.skw_prop
+    transfer_list = list()
+    for item in skw_prop.shape_keys_to_transfer:
+        if item.checked:
+            transfer_list.append(item.name)
+
+    values = dict()
+    for sk in active.data.shape_keys.key_blocks:
+        if sk.name in transfer_list:
+            values[sk.name] = sk.value
+
+    for target_obj in selected:
+        if target_obj is active or target_obj.data.shape_keys is None:
+            continue
+        for sk in target_obj.data.shape_keys.key_blocks:
+            sk.value = values.get(sk.name, sk.value)
+
 
 
 class SKW_OT_transfer_shape_keys(bpy.types.Operator):
@@ -154,8 +179,8 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
 
 
 class SKW_OT_refresh_shape_keys(bpy.types.Operator):
-    bl_idname = "shape_key_wrap.refresh_list"
-    bl_label = "Refresh"
+    bl_idname = 'shape_key_wrap.refresh_list'
+    bl_label = 'Refresh'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_options = {'REGISTER', 'UNDO'}
@@ -180,7 +205,27 @@ class SKW_OT_refresh_shape_keys(bpy.types.Operator):
         return {'FINISHED'}
 
 
-CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys]
+class SKW_OT_transfer_shape_key_values(bpy.types.Operator):
+    bl_idname = 'shape_key_wrap.transfer_values'
+    bl_label = 'Transfer Values'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'WINDOW'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        result, _ = skw_poll_transfer_shapekeys(context)
+        return result
+
+    def invoke(self, context, event):
+        return self.execute(context)
+
+    def execute(self, context):
+        skw_transfer_shape_key_values(self, context)
+        return {'FINISHED'}
+
+
+CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys, SKW_OT_transfer_shape_key_values]
 
 
 def register():
