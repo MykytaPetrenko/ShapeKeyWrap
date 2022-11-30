@@ -7,6 +7,19 @@ REFRESH_LIST_OPTION = [
     ('UNCHECK_ALL', 'Uncheck All', '', 2)    
 ]
 
+def skw_shape_key_add_binding_driver(sk, src_object, src_sk_name):
+    f_curve = sk.driver_add('value')
+    driver = f_curve.driver
+    if 'skw_var' in driver.variables:
+        v = driver.variables['skw_var']
+    else:
+        v = driver.variables.new()
+    v.type = 'SINGLE_PROP'
+    v.name = 'skw_var'
+    target = v.targets[0]
+    target.id = src_object.id_data
+    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].value'
+    driver.expression = 'skw_var'
 
 
 def skw_transfer_shape_keys(self, context):
@@ -82,8 +95,15 @@ def skw_transfer_shape_keys(self, context):
                 keep_modifier=True,
                 modifier=deformer.name, report=False
             )
-            target_sk = target_obj.data.shape_keys.key_blocks[-1]
-            target_sk.value = sk.value
+
+            if props.bind:
+                target_sk = target_obj.data.shape_keys.key_blocks[-1]
+                skw_shape_key_add_binding_driver(
+                    sk=target_sk,
+                    src_object=active,
+                    src_sk_name=sk.name
+                )
+           
         active.active_shape_key_index = 0
 
         target_obj.active_shape_key_index = target_obj_active_shape_key_index
@@ -119,7 +139,7 @@ def skw_poll_transfer_shapekeys(context):
         return True, f'From: {active.name}\nTo: {obj_count} other objects'
 
 
-def skw_transfer_shape_key_values(self, context):
+def skw_bind_shape_key_values(self, context):
     active = context.active_object
     selected = context.selected_objects
 
@@ -127,20 +147,20 @@ def skw_transfer_shape_key_values(self, context):
     transfer_list = list()
     if skw.transfer_by_list:
         for item in skw.shape_keys_to_transfer:
-            if item.checked:
+            if item.checked and item.name in active.data.shape_keys.key_blocks:
                 transfer_list.append(item.name)
-
-    values = dict()
-    for sk in active.data.shape_keys.key_blocks:
-        if skw.transfer_by_list and sk.name not in transfer_list:
-            continue
-        values[sk.name] = sk.value
+    else:
+        for sk in active.data.shape_keys.key_blocks:
+            transfer_list.append(sk.name)
 
     for target_obj in selected:
         if target_obj is active or target_obj.data.shape_keys is None:
             continue
-        for sk in target_obj.data.shape_keys.key_blocks:
-            sk.value = values.get(sk.name, sk.value)
+        for sk_name in transfer_list:
+            sk = target_obj.data.shape_keys.key_blocks.get(sk_name, None)
+            if sk is None:
+                continue
+            skw_shape_key_add_binding_driver(sk=sk, src_object=active, src_sk_name=sk_name)
 
 
 
@@ -151,6 +171,11 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
     bl_region_type = 'WINDOW'
     bl_options = {'REGISTER', 'UNDO'}
 
+    bind: bpy.props.BoolProperty(
+        name='Bind Values',
+        description='If it is ON, target shape key values will be bound to source shape key values via drivers.',
+        default=True
+    )
     replace_shapekeys: bpy.props.BoolProperty(
         name='!Replace Shapekeys',
         description='If it is ON, and target mesh have shape key with the same names as source'
@@ -208,9 +233,9 @@ class SKW_OT_refresh_shape_keys(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class SKW_OT_transfer_shape_key_values(bpy.types.Operator):
-    bl_idname = 'shape_key_wrap.transfer_values'
-    bl_label = 'Transfer Values'
+class SKW_OT_bind_shape_key_values(bpy.types.Operator):
+    bl_idname = 'shape_key_wrap.bind_values'
+    bl_label = 'Bind Values'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_options = {'REGISTER', 'UNDO'}
@@ -224,11 +249,11 @@ class SKW_OT_transfer_shape_key_values(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
-        skw_transfer_shape_key_values(self, context)
+        skw_bind_shape_key_values(self, context)
         return {'FINISHED'}
 
 
-CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys, SKW_OT_transfer_shape_key_values]
+CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys, SKW_OT_bind_shape_key_values]
 
 
 def register():

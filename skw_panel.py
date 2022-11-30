@@ -2,7 +2,7 @@ import bpy
 from .skw_operators import (
     SKW_OT_transfer_shape_keys,
     SKW_OT_refresh_shape_keys,
-    SKW_OT_transfer_shape_key_values,
+    SKW_OT_bind_shape_key_values,
     skw_poll_transfer_shapekeys
 )
 
@@ -58,7 +58,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
         box = layout.box()
         col = box.column(align=True)
         col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shape Keys', icon='ARROW_LEFTRIGHT')
-        col.operator(SKW_OT_transfer_shape_key_values.bl_idname, text='Transfer Values', icon='ARROW_LEFTRIGHT')
+        col.operator(SKW_OT_bind_shape_key_values.bl_idname, text='Bind Values', icon='DRIVER')
 
 
 classes = [SKT_PT_object_mode, SKT_UL_items]
