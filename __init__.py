@@ -6,7 +6,7 @@ from . import skw_props
 
 bl_info = {
     'name' : 'ShapeKeyWrap',
-    'author' : 'Mykyta Petrenko (Squeezy Weasel)',
+    'author' : 'Mykyta Petrenko (Squeezy Pixels)',
     'description' : 'Blender addon for transfering shapekeys from on mesh to another one using surface deform modifier.',
     'blender' : (3, 00, 0),
     'version' : (0, 3, 0),
