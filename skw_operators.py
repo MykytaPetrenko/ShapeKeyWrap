@@ -21,6 +21,33 @@ def skw_shape_key_add_binding_driver(sk, src_object, src_sk_name):
     target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].value'
     driver.expression = 'skw_var'
 
+    f_curve = sk.driver_add('slider_min')
+    driver = f_curve.driver
+    if 'skw_var_min' in driver.variables:
+        v = driver.variables['skw_var_min']
+    else:
+        v = driver.variables.new()
+    v.type = 'SINGLE_PROP'
+    v.name = 'skw_var_min'
+    target = v.targets[0]
+    target.id = src_object.id_data
+    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].slider_min'
+    driver.expression = 'skw_var_min'
+
+    f_curve = sk.driver_add('slider_max')
+    driver = f_curve.driver
+    if 'skw_var_max' in driver.variables:
+        v = driver.variables['skw_var_max']
+    else:
+        v = driver.variables.new()
+    v.type = 'SINGLE_PROP'
+    v.name = 'skw_var_max'
+    target = v.targets[0]
+    target.id = src_object.id_data
+    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].slider_max'
+    driver.expression = 'skw_var_max'
+
+
 
 def skw_transfer_shape_keys(self, context):
     props = self.properties
