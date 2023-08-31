@@ -61,21 +61,6 @@ def skw_transfer_shape_keys(self, context):
             if item.checked:
                 transfer_list.append(item.name)
 
-    # Validation (Now it is done via poll classmethod)
-    # if active is None or len(selected) <= 1:
-    #     self.report({'ERROR'}, 'Invalid objects selection')
-    #     return
-    # if active.type != 'MESH':
-    #     self.report({'ERROR'}, f'Valid source (active) object type is "MESH". "{active.name}" type is "{active.type}"')
-    #     return
-    # for obj in selected:
-    #     if obj.type != 'MESH':
-    #         self.report({'ERROR'}, f'Valid target object type is "MESH". "{obj.name}" type is "{obj.type}"')
-    #         return
-    # if active.data.shape_keys is None:
-    #     self.report({'ERROR'}, f'Source (active) object "{obj.name}" does not have shape keys.')
-    #     return
-
     active_obj_show_only_shape_key = active.show_only_shape_key
     active_obj_active_shape_key_index = active.active_shape_key_index
     active.active_shape_key_index = 0
