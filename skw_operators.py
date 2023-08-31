@@ -200,14 +200,16 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
 
     bind: bpy.props.BoolProperty(
         name='Bind Values',
-        description='If it is ON, target shape key values will be bound to source shape key values via drivers.',
+        description='When enabled, the target shape key values and their minimum/maximum boundaries '
+            'will be linked to the source shape key values using drivers.',
         default=True
     )
     replace_shapekeys: bpy.props.BoolProperty(
         name='!Replace Shapekeys',
-        description='If it is ON, and target mesh have shape key with the same names as source'
-            ' mesh they will be replaced. Be carefull with the checkbox because the key shape data '
-            'may be lost irrecoverably.',
+        description='When enabled, and if the target mesh has shape keys with '
+            'the same names as the source mesh, those keys will be replaced. '
+            'Exercise caution when using this checkbox, as the shape key data of the target mesh '
+            'could be lost irretrievably.',
             default=False
         )
     falloff: bpy.props.FloatProperty(
