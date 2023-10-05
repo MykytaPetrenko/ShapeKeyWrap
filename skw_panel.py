@@ -41,6 +41,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
         if active and active.type == 'MESH':
             mesh = active.data
             skw = mesh.skw_prop
+            layout.prop(skw, 'disable_modifiers', text='Disable Modifiers')
             layout.prop(skw, 'transfer_by_list', text='Transfer By The List', toggle=True)
             col = layout.column(align=True)
             col.enabled = skw.transfer_by_list

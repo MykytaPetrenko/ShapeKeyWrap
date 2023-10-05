@@ -65,6 +65,13 @@ def skw_transfer_shape_keys(self, context):
     active_obj_active_shape_key_index = active.active_shape_key_index
     active.active_shape_key_index = 0
     active.show_only_shape_key = True
+
+    # Memorize the modifier viewport state
+    if skw.disable_modifiers:
+        modifiers_state = dict()
+        for modifier in active.modifiers:
+            modifiers_state[modifier.name] = modifier.show_viewport
+            modifier.show_viewport = False
     
     num_sk = len(active.data.shape_keys.key_blocks)
     for target_obj in selected:
@@ -124,6 +131,11 @@ def skw_transfer_shape_keys(self, context):
 
     active.active_shape_key_index = active_obj_active_shape_key_index
     active.show_only_shape_key = active_obj_show_only_shape_key
+
+    # Restore the modifier viewport state
+    if skw.disable_modifiers:
+        for modifier in active.modifiers:
+            modifier.show_viewport = modifiers_state.get(modifier.name, False)
 
 
 def skw_poll_transfer_shapekeys(context):

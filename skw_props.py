@@ -9,6 +9,8 @@ class SKW_Property(bpy.types.PropertyGroup):
     shape_keys_to_transfer: bpy.props.CollectionProperty(type=SKW_ListItem)
     shape_key_index: bpy.props.IntProperty()
     transfer_by_list: bpy.props.BoolProperty(default=False)
+    show_advanced: bpy.props.BoolProperty(default=False)
+    disable_modifiers: bpy.props.BoolProperty(default=True)
 
     def refresh_shape_keys(self, mesh, default=None):
         old_values = dict()
