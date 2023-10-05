@@ -16,5 +16,7 @@ By default the add-on will bind shape key values with the shape keys. But you ca
 1. Do steps 1-4 from the preceding paragraph (see above "How to transfer Shape Keys").
 2. Click "Bind Values" button. The shape key values of the target object will be bound do shape keys of the values of the source shape keys with matching names. 
 
+# Known issues
+Empty shape keys are created on the target meshes. The problem is related to the inability to bind the surface deform modifier to the source mesh, and disabling modifiers can sometimes resolve this issue. A "Disable Modifiers" checkbox has been added, which temporarily disables all modifiers of the source mesh to address this issue. However, the add-on will still create empty shape keys in cases when Blender's surface deform modifier binding operation ends with an error (for example, when the mesh contains edges adjacent to three or more faces).
 
 If you liked the addon, visit my [youtube channel](https://www.youtube.com/@squeezypixels) and  [gumroad page](https://squeezypixels.gumroad.com/l/shapekeywrap)
