@@ -20,5 +20,6 @@ By default the add-on will bind shape key values with the shape keys. But you ca
 Empty shape keys are created on the target meshes. The problem is related to the inability to bind the surface deform modifier to the source mesh, and disabling modifiers can sometimes resolve this issue. A "Disable Modifiers" checkbox has been added, which temporarily disables all modifiers of the source mesh to address this issue. However, the add-on will still create empty shape keys in cases when Blender's surface deform modifier binding operation ends with an error (for example, when the mesh contains edges adjacent to three or more faces).
 
 # Feedback and Support
-Join our [Discord Server to](https://discord.gg/zGDqh2CsbJ) share your feedback and ask for help
+Join our [Discord Server to](https://discord.gg/zGDqh2CsbJ) share your feedback and ask for help.
+
 Also visit my [youtube channel](https://www.youtube.com/@squeezypixels) and [gumroad page](https://squeezypixels.gumroad.com/l/shapekeywrap) If you liked the addon
