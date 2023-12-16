@@ -49,7 +49,7 @@ def skw_shape_key_add_binding_driver(sk, src_object, src_sk_name):
 
 
 
-def skw_transfer_shape_keys(self, context):
+def skw_transfer_shape_keys(self, context: bpy.types.Context):
     props = self.properties
     active = context.active_object
     selected = context.selected_objects
@@ -77,7 +77,7 @@ def skw_transfer_shape_keys(self, context):
     for target_obj in selected:
         if target_obj is active:
             continue
-
+        context.view_layer.objects.active = target_obj
         target_obj_show_only_shape_key = target_obj.show_only_shape_key
         target_obj_active_shape_key_index = target_obj.active_shape_key_index
         target_obj.active_shape_key_index = 0
@@ -87,14 +87,8 @@ def skw_transfer_shape_keys(self, context):
         deformer.target = active
         deformer.falloff = props.falloff
         deformer.strength = props.strength
-        bpy.ops.object.modifier_move_to_index(
-            {"object" : target_obj},
-            modifier=deformer.name, index=0
-        )
-        bpy.ops.object.surfacedeform_bind(
-            {"object" : target_obj},
-            modifier=deformer.name
-        )
+        bpy.ops.object.modifier_move_to_index(modifier=deformer.name, index=0)
+        bpy.ops.object.surfacedeform_bind(modifier=deformer.name)
         
         for i in range(1, num_sk):
             active.active_shape_key_index = i
@@ -109,11 +103,7 @@ def skw_transfer_shape_keys(self, context):
                     target_obj.active_shape_key_index = sk_index
                     bpy.ops.object.shape_key_remove({"object" : target_obj})
 
-            bpy.ops.object.modifier_apply_as_shapekey(
-                {"object" : target_obj},
-                keep_modifier=True,
-                modifier=deformer.name, report=False
-            )
+            bpy.ops.object.modifier_apply_as_shapekey(keep_modifier=True, modifier=deformer.name, report=False)
 
             if props.bind:
                 target_sk = target_obj.data.shape_keys.key_blocks[-1]
@@ -129,6 +119,7 @@ def skw_transfer_shape_keys(self, context):
         target_obj.show_only_shape_key = target_obj_show_only_shape_key
         target_obj.modifiers.remove(deformer)
 
+    context.view_layer.objects.active = active
     active.active_shape_key_index = active_obj_active_shape_key_index
     active.show_only_shape_key = active_obj_show_only_shape_key
 
