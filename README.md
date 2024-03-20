@@ -1,5 +1,5 @@
 # Transfer shape keys in a couple clicks
-Blender addon for transfering shapekeys from on mesh to another one and binding thier values. There is another free addon that do almost the same with another algorythm (you may check it here https://github.com/fblah/ShapeKeyTransferBlender), but sometimes it does not work properly. So have writen my own addon. It is very fast and simple (around a hundred lines of code).
+Blender addon for transfering shapekeys from on mesh to another one and binding thier values. There is another free addon that do almost the same with another algorythm (you may check it [here](https://github.com/fblah/ShapeKeyTransferBlender)), but sometimes it does not work properly. So have writen my own addon. It is very fast and simple (around a hundred lines of code).
 
 # How to transfer Shape Keys
 1. Switch to object mode
@@ -17,9 +17,18 @@ By default the add-on will bind shape key values with the shape keys. But you ca
 2. Click "Bind Values" button. The shape key values of the target object will be bound do shape keys of the values of the source shape keys with matching names. 
 
 # Known issues
-Empty shape keys are created on the target meshes. The problem is related to the inability to bind the surface deform modifier to the source mesh, and disabling modifiers can sometimes resolve this issue. A "Disable Modifiers" checkbox has been added, which temporarily disables all modifiers of the source mesh to address this issue. However, the add-on will still create empty shape keys in cases when Blender's surface deform modifier binding operation ends with an error (for example, when the mesh contains edges adjacent to three or more faces).
+## Unable to bind surface deform modifier error
+The problem is related to the inability to bind the surface deform modifier to the source mesh
+- Check out the blender [Surface Deform Modifier documentation](https://docs.blender.org/manual/en/latest/modeling/modifiers/deform/surface_deform.html) on target mesh validity and check your mehs. ShapeKeyWrap source is SurfaceDeform target so you need to check the mesh from which you transfer shape keys first of all. The most frequent problem is **"edges with more than two faces"**. **"concave faces"** is less frequent but also occurs. 
+- When there no other problems but you still getting the error. Experimentally I got this behaviour when a lot of vertices of target and source mesh have the same coordinates. I have found a few solutions:
+   - Disabling modifiers can sometimes resolve this issue.
+   - Shifting vertices of one mesh very slightly. You can add such noise enabling "Bind Noise" feature. Wery slight noise value sometimes helps.
+   - Let me know if you know other solutions
 
 # Feedback and Support
 Join our [Discord Server to](https://discord.gg/zGDqh2CsbJ) share your feedback and ask for help.
 
 Also visit my [youtube channel](https://www.youtube.com/@squeezypixels) and [gumroad page](https://squeezypixels.gumroad.com/l/shapekeywrap) If you liked the addon
+
+# Another Add-ons
+**[MetaReForge](https://www.artstation.com/a/32654843)** - Paid add-on for Metahuman customization in blender

@@ -1,5 +1,6 @@
 import bpy
-
+import mathutils
+import random
 
 REFRESH_LIST_OPTION = [
     ('REFRESH', 'Refresh', '', 0),
@@ -7,7 +8,27 @@ REFRESH_LIST_OPTION = [
     ('UNCHECK_ALL', 'Uncheck All', '', 2)    
 ]
 
-def skw_shape_key_add_binding_driver(sk, src_object, src_sk_name):
+
+class IsNotBoundException(Exception):
+    pass
+
+
+class ObjectShapeKeyState:
+    def __init__(self, obj: bpy.types.Object) -> None:
+        self.show_only_shape_key = obj.show_only_shape_key
+        self.shape_key_values = {sk.name: sk.value for sk in obj.data.shape_keys.key_blocks}
+        self.shape_key_index = obj.active_shape_key_index
+
+    def restore(self, obj: bpy.types.Object) -> None:
+        obj.show_only_shape_key = self.show_only_shape_key
+        for k, v in self.shape_key_values.items():
+            sk = obj.data.shape_keys.key_blocks.get(k)
+            if sk:
+                sk.value = v
+        obj.active_shape_key_index = self.shape_key_index
+
+
+def skw_shape_key_add_binding_driver(sk, src_object: bpy.types.Object, src_sk_name: str) -> None:
     f_curve = sk.driver_add('value')
     driver = f_curve.driver
     if 'skw_var' in driver.variables:
@@ -48,8 +69,7 @@ def skw_shape_key_add_binding_driver(sk, src_object, src_sk_name):
     driver.expression = 'skw_var_max'
 
 
-
-def skw_transfer_shape_keys(self, context: bpy.types.Context):
+def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
     props = self.properties
     active = context.active_object
     selected = context.selected_objects
@@ -61,23 +81,28 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context):
             if item.checked:
                 transfer_list.append(item.name)
 
-    active_obj_show_only_shape_key = active.show_only_shape_key
-    active_obj_active_shape_key_index = active.active_shape_key_index
-    active.active_shape_key_index = 0
-    active.show_only_shape_key = True
+    active_sk_state = ObjectShapeKeyState(active)
+    active.show_only_shape_key = False
+    for sk in active.data.shape_keys.key_blocks:
+        sk.value = 0.0
 
-    # Memorize the modifier viewport state
-    if skw.disable_modifiers:
-        modifiers_state = dict()
-        for modifier in active.modifiers:
-            modifiers_state[modifier.name] = modifier.show_viewport
-            modifier.show_viewport = False
+    noise_key_name = None
+    if skw.bind_noise:
+        # Add a new shape key
+        noise_key = active.shape_key_add(name="DELTA_NOISE", from_mix=False)
+        noise_key_name = noise_key.name
+        active.data.update()
+        # Get the vertex normals from the current shape
+        normals = [vertex.normal for vertex in active.data.vertices]
+        # Apply random offset to each vertex in the shape key
+        for i, vertex in enumerate(noise_key.data):
+            offset = normals[i] * random.uniform(skw.min_noise, skw.max_noise)
+            vertex.co +=  mathutils.Vector(offset)
+        noise_key.value = 1.0   
     
-    num_sk = len(active.data.shape_keys.key_blocks)
     for target_obj in selected:
         if target_obj is active:
             continue
-        context.view_layer.objects.active = target_obj
         target_obj_show_only_shape_key = target_obj.show_only_shape_key
         target_obj_active_shape_key_index = target_obj.active_shape_key_index
         target_obj.active_shape_key_index = 0
@@ -87,12 +112,18 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context):
         deformer.target = active
         deformer.falloff = props.falloff
         deformer.strength = props.strength
-        bpy.ops.object.modifier_move_to_index(modifier=deformer.name, index=0)
-        bpy.ops.object.surfacedeform_bind(modifier=deformer.name)
+        with context.temp_override(object=target_obj):
+            bpy.ops.object.modifier_move_to_index(modifier=deformer.name, index=0)
+            bpy.ops.object.surfacedeform_bind(modifier=deformer.name)
+
+        if not deformer.is_bound:
+            raise IsNotBoundException()
         
-        for i in range(1, num_sk):
-            active.active_shape_key_index = i
-            sk = active.active_shape_key
+        for sk in active.data.shape_keys.key_blocks[1:]:
+            # Skip temp noise shape key
+            if sk.name == noise_key_name:
+                continue
+            sk.value = 1.0
             if skw.transfer_by_list and sk.name not in transfer_list:
                 continue
             deformer.name = sk.name
@@ -101,9 +132,15 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context):
                 if target_sks is not None and sk.name in target_sks.key_blocks.keys():
                     sk_index = target_sks.key_blocks.keys().index(sk.name)
                     target_obj.active_shape_key_index = sk_index
-                    bpy.ops.object.shape_key_remove({"object" : target_obj})
+                    with context.temp_override(object=target_obj):
+                        bpy.ops.object.shape_key_remove()
 
-            bpy.ops.object.modifier_apply_as_shapekey(keep_modifier=True, modifier=deformer.name, report=False)
+            with context.temp_override(object=target_obj):
+                bpy.ops.object.modifier_apply_as_shapekey(
+                    keep_modifier=True,
+                    modifier=deformer.name,
+                    report=False
+                )
 
             if props.bind:
                 target_sk = target_obj.data.shape_keys.key_blocks[-1]
@@ -112,24 +149,24 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context):
                     src_object=active,
                     src_sk_name=sk.name
                 )
+            sk.value = 0.0
            
-        active.active_shape_key_index = 0
-
         target_obj.active_shape_key_index = target_obj_active_shape_key_index
         target_obj.show_only_shape_key = target_obj_show_only_shape_key
         target_obj.modifiers.remove(deformer)
 
-    context.view_layer.objects.active = active
-    active.active_shape_key_index = active_obj_active_shape_key_index
-    active.show_only_shape_key = active_obj_show_only_shape_key
+    # Remove Noise Shape Key
+    if noise_key_name:
+        index = active.data.shape_keys.key_blocks.find(noise_key_name)
+        if index > 0:
+            active.active_shape_key_index = index
+            bpy.ops.object.shape_key_remove()
+    
+    # Restore shape key values, active etc.
+    active_sk_state.restore(active)
+    
 
-    # Restore the modifier viewport state
-    if skw.disable_modifiers:
-        for modifier in active.modifiers:
-            modifier.show_viewport = modifiers_state.get(modifier.name, False)
-
-
-def skw_poll_transfer_shapekeys(context):
+def skw_poll_transfer_shapekeys(context: bpy.types.Context):
     active = context.active_object
     if active is None:
         return False, 'Invalid source object'
@@ -154,7 +191,7 @@ def skw_poll_transfer_shapekeys(context):
         return True, f'From: {active.name}\nTo: {obj_count} other objects'
 
 
-def skw_bind_shape_key_values(self, context):
+def skw_bind_shape_key_values(self, context: bpy.types.Context):
     active = context.active_object
     selected = context.selected_objects
 
@@ -176,7 +213,6 @@ def skw_bind_shape_key_values(self, context):
             if sk is None:
                 continue
             skw_shape_key_add_binding_driver(sk=sk, src_object=active, src_sk_name=sk_name)
-
 
 
 class SKW_OT_transfer_shape_keys(bpy.types.Operator):
@@ -215,12 +251,16 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
         result, _ = skw_poll_transfer_shapekeys(context)
         return result
 
-    def invoke(self, context, event):
-        return self.execute(context)
-
     def execute(self, context):
-        skw_transfer_shape_keys(self, context)
-        return {'FINISHED'}
+        try:
+            skw_transfer_shape_keys(self, context)
+        except IsNotBoundException:
+            self.report({"ERROR"}, "Unable to bind surface deform modifier. Learn more from the addons github")
+            return {"CANCELLED"}
+        except Exception as ex:
+            self.report({"ERROR"}, str(ex))
+            return {"CANCELLED"}
+        return {"FINISHED"}
 
 
 class SKW_OT_refresh_shape_keys(bpy.types.Operator):
