@@ -19,10 +19,10 @@ By default the add-on will bind shape key values with the shape keys. But you ca
 # Known issues
 ## Unable to bind surface deform modifier error
 The problem is related to the inability to bind the surface deform modifier to the source mesh
-- Check out the blender [Surface Deform Modifier documentation](https://docs.blender.org/manual/en/latest/modeling/modifiers/deform/surface_deform.html) on target mesh validity and check your mehs. ShapeKeyWrap source is SurfaceDeform target so you need to check the mesh from which you transfer shape keys first of all. The most frequent problem is **"edges with more than two faces"**. **"concave faces"** is less frequent but also occurs. 
-- When there no other problems but you still getting the error. Experimentally I got this behaviour when a lot of vertices of target and source mesh have the same coordinates. I have found a few solutions:
+- Check out the blender [Surface Deform Modifier documentation](https://docs.blender.org/manual/en/latest/modeling/modifiers/deform/surface_deform.html) on target mesh validity and check your mesh. ShapeKeyWrap source is SurfaceDeform target so you need to check the mesh from which you transfer shape keys first of all. The most frequent problem is **"edges with more than two faces"**. **"concave faces"** is less frequent but also occurs. 
+- When there no other problems but you still getting the error. Experimentally I got this behavior when a lot of vertices of target and source mesh have the same coordinates. I have found a few solutions:
    - Disabling modifiers can sometimes resolve this issue.
-   - Shifting vertices of one mesh very slightly. You can add such noise enabling "Bind Noise" feature. Wery slight noise value sometimes helps.
+   - Shifting vertices of one mesh very slightly. You can add such noise enabling "Bind Noise" feature. Very slight noise value sometimes helps.
    - Let me know if you know other solutions
 
 # Feedback and Support
