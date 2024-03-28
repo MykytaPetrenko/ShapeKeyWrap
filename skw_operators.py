@@ -117,6 +117,15 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
             bpy.ops.object.surfacedeform_bind(modifier=deformer.name)
 
         if not deformer.is_bound:
+            # Remove Noise Shape Key
+            if noise_key_name:
+                index = active.data.shape_keys.key_blocks.find(noise_key_name)
+                if index > 0:
+                    active.active_shape_key_index = index
+                    bpy.ops.object.shape_key_remove()
+            
+            # Restore shape key values, active etc.
+            active_sk_state.restore(active)
             raise IsNotBoundException()
         
         for sk in active.data.shape_keys.key_blocks[1:]:
