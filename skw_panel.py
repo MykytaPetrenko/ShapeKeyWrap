@@ -18,7 +18,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
     """
     Addon main menu (N-Panel)
     """
-    bl_label = 'Shape Key Wrap'
+    bl_label = 'Shape Key Wrap UwU'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Tools'
@@ -45,7 +45,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
             if skw.bind_noise:
                 layout.prop(skw, 'min_noise', text='Min Noise')
                 layout.prop(skw, 'max_noise', text='Max Noise')
-            layout.prop(skw, 'transfer_by_list', text='Transfer By The List', toggle=True)
+            layout.prop(skw, 'transfer_by_list', text='Transfur By The Lwist', toggle=True)
             col = layout.column(align=True)
             col.enabled = skw.transfer_by_list
             col.template_list(
@@ -54,15 +54,15 @@ class SKT_PT_object_mode(bpy.types.Panel):
                 skw, 'shape_key_index',
                 rows=5
             )
-            col.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Refresh').action = 'REFRESH'
+            col.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Refwesh').action = 'REFRESH'
             row = col.row(align=True)
-            row.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Check All').action = 'CHECK_ALL'
-            row.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Uncheck All').action = 'UNCHECK_ALL'
+            row.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Sewect All').action = 'CHECK_ALL'
+            row.operator(SKW_OT_refresh_shape_keys.bl_idname, text='Unsewect All').action = 'UNCHECK_ALL'
 
         box = layout.box()
         col = box.column(align=True)
         col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shape Keys', icon='ARROW_LEFTRIGHT')
-        col.operator(SKW_OT_bind_shape_key_values.bl_idname, text='Bind Values', icon='DRIVER')
+        col.operator(SKW_OT_bind_shape_key_values.bl_idname, text='Bind Valuwues', icon='DRIVER')
 
 
 classes = [SKT_PT_object_mode, SKT_UL_items]
