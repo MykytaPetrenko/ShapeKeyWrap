@@ -179,26 +179,26 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
 def skw_poll_transfer_shapekeys(context: bpy.types.Context):
     active = context.active_object
     if active is None:
-        return False, 'Invalid source object'
+        return False, 'Invalid source object GRR!'
     if active.type != 'MESH':
-        return False, 'Non-mesh object is active'
+        return False, 'Select a mesh silly'
     if active.data.shape_keys is None or len(active.data.shape_keys.key_blocks) <= 1:
-        return False, 'Insufficient number of shapekeys'
+        return False, 'No shapekeys hewe is lonely'
 
     if len(context.selected_objects) < 2:
-        return False, 'No target object selected'
+        return False, 'Sewect a target objewct'
     obj_count = 0
     obj_name = ''
     for obj in context.selected_objects:
         if obj.type != 'MESH':
-            return False, 'Non-mesh object is selected'
+            return False, 'Select ONLY meshes silly grr'
         elif obj is not active:
             obj_count += 1
             obj_name = obj.name
     if obj_count == 1:
-        return True, f'From: {active.name}\nTo: {obj_name}'
+        return True, f'Fwom: {active.name}\nTo: {obj_name}'
     else:
-        return True, f'From: {active.name}\nTo: {obj_count} other objects'
+        return True, f'Fwom: {active.name}\nTo: {obj_count} other objects!!!'
 
 
 def skw_bind_shape_key_values(self, context: bpy.types.Context):
@@ -265,12 +265,12 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
         try:
             skw_transfer_shape_keys(self, context)
         except IsNotBoundException:
-            self.report({"ERROR"}, "Unable to bind surface deform modifier. Learn more from the addons github")
-            return {"CANCELLED"}
+            self.report({"ERROR"}, " Is beeeg pwoblem! Unable to bind surface deform modifier. Learn more from the addons github")
+            return {"CANCELLED cwy"}
         except Exception as ex:
             self.report({"ERROR"}, str(ex))
-            return {"CANCELLED"}
-        return {"FINISHED"}
+            return {"CANCELLED cwy"}
+        return {"FINISHED YAyyyy"}
 
 
 class SKW_OT_refresh_shape_keys(bpy.types.Operator):
