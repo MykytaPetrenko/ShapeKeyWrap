@@ -132,9 +132,10 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
             # Skip temp noise shape key
             if sk.name == noise_key_name:
                 continue
-            sk.value = 1.0
             if skw.transfer_by_list and sk.name not in transfer_list:
                 continue
+            # Moved this back a few lines, to stop settting shapekeys and then exiting.
+            sk.value = 1.0
             deformer.name = sk.name
             if props.replace_shapekeys:
                 target_sks = target_obj.data.shape_keys
