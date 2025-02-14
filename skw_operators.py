@@ -266,11 +266,11 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
             skw_transfer_shape_keys(self, context)
         except IsNotBoundException:
             self.report({"ERROR"}, " Is beeeg pwoblem! Unable to bind surface deform modifier. Learn more from the addons github")
-            return {"CANCELLED cwy"}
+            return {"CANCELLED"}
         except Exception as ex:
             self.report({"ERROR"}, str(ex))
-            return {"CANCELLED cwy"}
-        return {"FINISHED YAyyyy"}
+            return {"CANCELLED"}
+        return {"FINISHED"}
 
 
 class SKW_OT_refresh_shape_keys(bpy.types.Operator):
