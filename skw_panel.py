@@ -45,6 +45,9 @@ class SKT_PT_object_mode(bpy.types.Panel):
             if skw.bind_noise:
                 layout.prop(skw, 'min_noise', text='Min Noise')
                 layout.prop(skw, 'max_noise', text='Max Noise')
+            layout.prop(skw, 'delete_empty', text='Delete Empty')
+            if skw.delete_empty:
+                layout.prop(skw, 'empty_threshold', text='Threshold')
             layout.prop(skw, 'transfer_by_list', text='Transfur By The Lwist', toggle=True)
             col = layout.column(align=True)
             col.enabled = skw.transfer_by_list
@@ -61,7 +64,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shape Keys', icon='ARROW_LEFTRIGHT')
+        col.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfur Shape Keys', icon='ARROW_LEFTRIGHT')
         col.operator(SKW_OT_bind_shape_key_values.bl_idname, text='Bind Valuwues', icon='DRIVER')
 
 
