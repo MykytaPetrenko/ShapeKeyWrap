@@ -14,6 +14,9 @@ class SKW_Property(bpy.types.PropertyGroup):
     min_noise: bpy.props.FloatProperty(default=-0.0001, precision=5)
     max_noise: bpy.props.FloatProperty(default=0.0001, precision=5)
 
+    delete_empty: bpy.props.BoolProperty(default=False)
+    empty_threshold: bpy.props.FloatProperty(default=0.00001, precision=5)
+
     def refresh_shape_keys(self, mesh, default=None):
         old_values = dict()
         for sk in self.shape_keys_to_transfer:
