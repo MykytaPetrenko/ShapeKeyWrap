@@ -1,16 +1,15 @@
 import bpy
-import mathutils
-import random
+import traceback
+from .functions.bind_drivers import bind_shape_key_values
+from .functions.remove_empty import remove_empty_shape_keys
+from .functions.transfer_shape_keys import transfer_shape_keys, IsNotBoundException
+
 
 REFRESH_LIST_OPTION = [
     ('REFRESH', 'Refresh', '', 0),
     ('CHECK_ALL', 'Check All', '', 1),
     ('UNCHECK_ALL', 'Uncheck All', '', 2)    
 ]
-
-
-class IsNotBoundException(Exception):
-    pass
 
 
 class ObjectShapeKeyState:
@@ -28,199 +27,49 @@ class ObjectShapeKeyState:
         obj.active_shape_key_index = self.shape_key_index
 
 
-def skw_shape_key_add_binding_driver(sk, src_object: bpy.types.Object, src_sk_name: str) -> None:
-    f_curve = sk.driver_add('value')
-    driver = f_curve.driver
-    if 'skw_var' in driver.variables:
-        v = driver.variables['skw_var']
-    else:
-        v = driver.variables.new()
-    v.type = 'SINGLE_PROP'
-    v.name = 'skw_var'
-    target = v.targets[0]
-    target.id = src_object.id_data
-    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].value'
-    driver.expression = 'skw_var'
-
-    f_curve = sk.driver_add('slider_min')
-    driver = f_curve.driver
-    if 'skw_var_min' in driver.variables:
-        v = driver.variables['skw_var_min']
-    else:
-        v = driver.variables.new()
-    v.type = 'SINGLE_PROP'
-    v.name = 'skw_var_min'
-    target = v.targets[0]
-    target.id = src_object.id_data
-    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].slider_min'
-    driver.expression = 'skw_var_min'
-
-    f_curve = sk.driver_add('slider_max')
-    driver = f_curve.driver
-    if 'skw_var_max' in driver.variables:
-        v = driver.variables['skw_var_max']
-    else:
-        v = driver.variables.new()
-    v.type = 'SINGLE_PROP'
-    v.name = 'skw_var_max'
-    target = v.targets[0]
-    target.id = src_object.id_data
-    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].slider_max'
-    driver.expression = 'skw_var_max'
-
 # gets called from SKW_OT_transfer_shape_keys(bpy.types.Operator):
-def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
-    props = self.properties
+def execute_shape_key_wrap(self, context: bpy.types.Context) -> None:
     active = context.active_object
     selected = context.selected_objects
+    tgt_objs = [obj for obj in selected if obj is not active]
 
-    skw = active.data.skw_prop
-    transfer_list = list() # holds names of shapekeys to be transferred
+    skw = active.data.skw_prop    
+    
     if skw.transfer_by_list:
-        for item in skw.shape_keys_to_transfer:
-            if item.checked:
-                transfer_list.append(item.name)
+        transfer_list = [item.name for item in skw.shape_keys_to_transfer if item.checked]
+    else:
+        transfer_list = None
 
-    active_sk_state = ObjectShapeKeyState(active)
-    active.show_only_shape_key = False
-    for sk in active.data.shape_keys.key_blocks:
-        sk.value = 0.0
+    transfer_shape_keys(
+        context=context,
+        from_obj=active,
+        to_objs=tgt_objs,
+        falloff=skw.falloff,
+        strength=skw.strength,
+        replace_existing_shape_keys=skw.overwrite_shapekeys,
+        transfer_list=transfer_list,
+        bind_noise=(skw.min_noise, skw.max_noise) if skw.bind_noise else None
+    )
 
-    noise_key_name = None
-    if skw.bind_noise:
-        # Add a new shape key
-        noise_key = active.shape_key_add(name="DELTA_NOISE", from_mix=False)
-        noise_key_name = noise_key.name
-        active.data.update()
-        # Get the vertex normals from the current shape
-        normals = [vertex.normal for vertex in active.data.vertices]
-        # Apply random offset to each vertex in the shape key
-        for i, vertex in enumerate(noise_key.data):
-            offset = normals[i] * random.uniform(skw.min_noise, skw.max_noise)
-            vertex.co +=  mathutils.Vector(offset)
-        noise_key.value = 1.0   
-    
-    for target_obj in selected:
-        if target_obj is active:
-            continue
-        target_obj_show_only_shape_key = target_obj.show_only_shape_key
-        target_obj_active_shape_key_index = target_obj.active_shape_key_index
-        target_obj.active_shape_key_index = 0
-        target_obj.show_only_shape_key = True
-
-        deformer = target_obj.modifiers.new(name='surface defrom', type='SURFACE_DEFORM')
-        deformer.target = active
-        deformer.falloff = props.falloff
-        deformer.strength = props.strength
-
-        shape_keys_to_remove = []
+    # Optionally remove empty shape keys
+    if skw.delete_empty:
         nullshapekeysdeleted = 0
-
-        with context.temp_override(object=target_obj):
-            bpy.ops.object.modifier_move_to_index(modifier=deformer.name, index=0)
-            bpy.ops.object.surfacedeform_bind(modifier=deformer.name)
-
-        if not deformer.is_bound:
-            # Remove Noise Shape Key
-            if noise_key_name:
-                index = active.data.shape_keys.key_blocks.find(noise_key_name)
-                if index > 0:
-                    active.active_shape_key_index = index
-                    bpy.ops.object.shape_key_remove()
-            
-            # Restore shape key values, active etc.
-            active_sk_state.restore(active)
-            raise IsNotBoundException()
+        for obj in tgt_objs:
+            res = remove_empty_shape_keys(context, obj, skw.empty_threshold, transfer_list)
+            nullshapekeysdeleted += res
         
-        for sk in active.data.shape_keys.key_blocks[1:]:
-            # Skip temp noise shape key
-            if sk.name == noise_key_name:
-                continue
-            if skw.transfer_by_list and sk.name not in transfer_list:
-                continue
+        if nullshapekeysdeleted == 0:
+            self.report({'INFO'}, f"No shape keys deleted. All keys have displacement above threshold.")
+        else:
+            self.report({'INFO'}, f"Deleted {nullshapekeysdeleted} shape keys with displacement below {skw.empty_threshold:.6f}")
             
-            sk.value = 1.0
-            deformer.name = sk.name
-            if props.replace_shapekeys:
-                target_sks = target_obj.data.shape_keys
-                if target_sks is not None and sk.name in target_sks.key_blocks.keys():
-                    sk_index = target_sks.key_blocks.keys().index(sk.name)
-                    target_obj.active_shape_key_index = sk_index
-                    with context.temp_override(object=target_obj):
-                        bpy.ops.object.shape_key_remove()
-
-            with context.temp_override(object=target_obj):
-                bpy.ops.object.modifier_apply_as_shapekey(
-                    keep_modifier=True,
-                    modifier=deformer.name,
-                    report=False
-                )
-                # delete if empty
-                if (skw.delete_empty):
-                    is_empty = True
-                    new_sk = target_obj.data.shape_keys.key_blocks[-1]
-                    is_empty = True
-                    for v in target_obj.data.vertices:
-                        delta = new_sk.data[v.index].co - v.co
-
-                        # If any displacement is above the threshold, mark the shape key as not empty
-                        if delta.length > skw.empty_threshold:
-                            is_empty = False
-                            break
-
-                    # If the shape key is empty (below the threshold), mark it for deletion
-                    if is_empty:
-                        shape_keys_to_remove.append(new_sk)
-                        nullshapekeysdeleted += 1
-
-
-
-            if props.bind:
-                target_sk = target_obj.data.shape_keys.key_blocks[-1]
-                skw_shape_key_add_binding_driver(
-                    sk=target_sk,
-                    src_object=active,
-                    src_sk_name=sk.name
-                )
-            sk.value = 0.0
-        
-        # delete if deleting
-        if (skw.delete_empty):
-            with context.temp_override(object=target_obj):
-                # Check if the skp_shape_key_remove operator is available
-                operator_to_use = bpy.ops.object.shape_key_remove
-                if "skp_shape_key_remove" in dir(bpy.ops.object):
-                    operator_to_use = bpy.ops.object.skp_shape_key_remove
-
-                # Delete the shape keys marked for removal (outside the loop to avoid modifying the collection during iteration)
-                for key in shape_keys_to_remove:
-                    iIndex = target_obj.data.shape_keys.key_blocks.keys().index(key.name)
-                    target_obj.active_shape_key_index = iIndex
-                    
-                    # Use the selected operator to delete the shape key
-                    operator_to_use('EXEC_DEFAULT')
-
-            if nullshapekeysdeleted == 0:
-                self.report({'INFO'}, f"No shape keys deleted. All keys have displacement above threshold.")
-            else:
-                self.report({'INFO'}, f"Deleted {nullshapekeysdeleted} shape keys with displacement below {skw.empty_threshold:.6f}")
-
-        target_obj.active_shape_key_index = target_obj_active_shape_key_index
-        target_obj.show_only_shape_key = target_obj_show_only_shape_key
-        target_obj.modifiers.remove(deformer)
-
-    # Remove Noise Shape Key
-    if noise_key_name:
-        index = active.data.shape_keys.key_blocks.find(noise_key_name)
-        if index > 0:
-            active.active_shape_key_index = index
-            bpy.ops.object.shape_key_remove()
-    
-    # Restore shape key values, active etc.
-    active_sk_state.restore(active)
+    # Optionally link the values and ranges of the transferred shape keys to the source
+    if skw.bind_values:
+        for obj in tgt_objs:
+            bind_shape_key_values(context, obj, active, transfer_list)
     
 
-def skw_poll_transfer_shapekeys(context: bpy.types.Context):
+def skw_poll(context: bpy.types.Context):
     active = context.active_object
     if active is None:
         return False, 'Invalid source object'
@@ -245,75 +94,34 @@ def skw_poll_transfer_shapekeys(context: bpy.types.Context):
         return True, f'From: {active.name}\nTo: {obj_count} other objects'
 
 
-def skw_bind_shape_key_values(self, context: bpy.types.Context):
-    active = context.active_object
-    selected = context.selected_objects
-
-    skw = active.data.skw_prop
-    transfer_list = list()
-    if skw.transfer_by_list:
-        for item in skw.shape_keys_to_transfer:
-            if item.checked and item.name in active.data.shape_keys.key_blocks:
-                transfer_list.append(item.name)
-    else:
-        for sk in active.data.shape_keys.key_blocks:
-            transfer_list.append(sk.name)
-
-    for target_obj in selected:
-        if target_obj is active or target_obj.data.shape_keys is None:
-            continue
-        for sk_name in transfer_list:
-            sk = target_obj.data.shape_keys.key_blocks.get(sk_name, None)
-            if sk is None:
-                continue
-            skw_shape_key_add_binding_driver(sk=sk, src_object=active, src_sk_name=sk_name)
-
-
 # gets called when transfer button clicked
 class SKW_OT_transfer_shape_keys(bpy.types.Operator):
-    bl_idname = "shape_key_wrap.transfer"
-    bl_label = "Transfer"
+    bl_idname = "shape_key_wrap.execute"
+    bl_label = "Execute"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_options = {'REGISTER', 'UNDO'}
 
-    bind: bpy.props.BoolProperty(
-        name='Bind Values',
-        description='When enabled, the target shape key values and their minimum/maximum boundaries '
-            'will be linked to the source shape key values using drivers.',
-        default=True
-    )
-    replace_shapekeys: bpy.props.BoolProperty(
-        name='!Replace Shapekeys',
-        description='When enabled, and if the target mesh has shape keys with '
-            'the same names as the source mesh, those keys will be replaced. '
-            'Exercise caution when using this checkbox, as the shape key data of the target mesh '
-            'could be lost irretrievably.',
-            default=False
-        )
-    falloff: bpy.props.FloatProperty(
-        name='Interpolation Falloff',
-        description='Surface Deform modifier property',
-        default=4, min=2, max=14)
-    strength: bpy.props.FloatProperty(
-        name='Strength',
-        description='Surface Deform modifier property',
-        default=1, min=-100, max=100
-        )
-
     @classmethod
     def poll(cls, context):
-        result, _ = skw_poll_transfer_shapekeys(context)
+        result, _ = skw_poll(context)
         return result
 
     def execute(self, context):
+        from_obj = context.active_object
+        active_sk_state = ObjectShapeKeyState(from_obj)
         try:
-            skw_transfer_shape_keys(self, context)
+            execute_shape_key_wrap(self, context)
         except IsNotBoundException:
+            # Restore shape key values, active etc.
             self.report({"ERROR"}, "Unable to bind surface deform modifier. Learn more from the addons github")
+            print(traceback.format_exc())
+            active_sk_state.restore(from_obj)
             return {"CANCELLED"}
         except Exception as ex:
             self.report({"ERROR"}, str(ex))
+            print(traceback.format_exc())
+            active_sk_state.restore(from_obj)
             return {"CANCELLED"}
         return {"FINISHED"}
 
@@ -347,25 +155,29 @@ class SKW_OT_refresh_shape_keys(bpy.types.Operator):
 
 class SKW_OT_bind_shape_key_values(bpy.types.Operator):
     bl_idname = 'shape_key_wrap.bind_values'
-    bl_label = 'Bind Values'
+    bl_label = 'Bind Values Shape Keys By Name'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
+    bl_description = (
+        'Links shape key values and ranges of selected objects with active object '
+        'by name using drivers.'
+    )
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
-        result, _ = skw_poll_transfer_shapekeys(context)
+        result, _ = skw_poll(context)
         return result
 
     def invoke(self, context, event):
         return self.execute(context)
 
     def execute(self, context):
-        skw_bind_shape_key_values(self, context)
+        bind_shape_key_values(self, context)
         return {'FINISHED'}
 
 
-CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys, SKW_OT_bind_shape_key_values]
+CLASSES = [SKW_OT_transfer_shape_keys, SKW_OT_refresh_shape_keys]
 
 
 def register():
