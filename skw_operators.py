@@ -138,7 +138,7 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
                 continue
             if skw.transfer_by_list and sk.name not in transfer_list:
                 continue
-            # Moved this back a few lines, to stop settting shapekeys and then exiting.
+            
             sk.value = 1.0
             deformer.name = sk.name
             if props.replace_shapekeys:
@@ -223,26 +223,26 @@ def skw_transfer_shape_keys(self, context: bpy.types.Context) -> None:
 def skw_poll_transfer_shapekeys(context: bpy.types.Context):
     active = context.active_object
     if active is None:
-        return False, 'Invalid source object GRR!'
+        return False, 'Invalid source object'
     if active.type != 'MESH':
-        return False, 'Select a mesh silly'
+        return False, 'Non-mesh object is active'
     if active.data.shape_keys is None or len(active.data.shape_keys.key_blocks) <= 1:
-        return False, 'No shapekeys hewe is lonely'
+        return False, 'Insufficient number of shapekeys'
 
     if len(context.selected_objects) < 2:
-        return False, 'Sewect a target objewct'
+        return False, 'No target object selected'
     obj_count = 0
     obj_name = ''
     for obj in context.selected_objects:
         if obj.type != 'MESH':
-            return False, 'Select ONLY meshes silly grr'
+            return False, 'Non-mesh object is selected'
         elif obj is not active:
             obj_count += 1
             obj_name = obj.name
     if obj_count == 1:
-        return True, f'Fwom: {active.name}\nTo: {obj_name}'
+        return True, f'From: {active.name}\nTo: {obj_name}'
     else:
-        return True, f'Fwom: {active.name}\nTo: {obj_count} other objects!!!'
+        return True, f'From: {active.name}\nTo: {obj_count} other objects'
 
 
 def skw_bind_shape_key_values(self, context: bpy.types.Context):
@@ -310,7 +310,7 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
         try:
             skw_transfer_shape_keys(self, context)
         except IsNotBoundException:
-            self.report({"ERROR"}, " Is beeeg pwoblem! Unable to bind surface deform modifier. Learn more from the addons github")
+            self.report({"ERROR"}, "Unable to bind surface deform modifier. Learn more from the addons github")
             return {"CANCELLED"}
         except Exception as ex:
             self.report({"ERROR"}, str(ex))
