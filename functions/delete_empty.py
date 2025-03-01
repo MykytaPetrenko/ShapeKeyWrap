@@ -2,17 +2,17 @@ import bpy
 from typing import List
 
 
-def remove_empty_shape_keys(
+def delete_empty_shape_keys(
         context: bpy.types.Context,
         obj: bpy.types.Object,
         empty_threshold: float,
-        shape_keys_to_check: List[str] | None = None
+        shape_keys: List[str] | None = None
 ) -> int:
     nullshapekeysdeleted = 0
     shape_keys_to_remove = []
 
     for sk in obj.data.shape_keys.key_blocks[1:]:
-        if sk.name not in shape_keys_to_check:
+        if shape_keys is not None and sk.name not in shape_keys:
             continue
 
         is_empty = True

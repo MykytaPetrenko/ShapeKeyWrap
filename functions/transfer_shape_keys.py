@@ -2,6 +2,7 @@ import bpy
 from typing import List
 import mathutils
 import random
+from .bind_drivers import shape_key_add_binding_driver
 
 
 class IsNotBoundException(Exception):
@@ -14,10 +15,14 @@ def transfer_shape_keys(
         to_objs: List[bpy.types.Object],
         falloff: float,
         strength: float,
-        replace_existing_shape_keys: bool = False,
-        transfer_list: List[str] | None = None,
-        bind_noise: tuple | None = None
+        overwrite_shape_keys: bool = False,
+        shape_keys: List[str] | None = None,
+        bind_noise: tuple | None = None,
+        create_drivers: bool = False
 ) -> None:
+    
+    result = {obj.name: list() for obj in to_objs}
+
     from_obj.show_only_shape_key = False
     for sk in from_obj.data.shape_keys.key_blocks:
         sk.value = 0.0
@@ -67,12 +72,12 @@ def transfer_shape_keys(
             # Skip temp noise shape key
             if sk.name == noise_key_name:
                 continue
-            if transfer_list is not None and sk.name not in transfer_list:
+            if shape_keys is not None and sk.name not in shape_keys:
                 continue
             
             sk.value = 1.0
             deformer.name = sk.name
-            if replace_existing_shape_keys:
+            if overwrite_shape_keys:
                 target_sks = tgt_obj.data.shape_keys
                 if target_sks is not None and sk.name in target_sks.key_blocks.keys():
                     sk_index = target_sks.key_blocks.keys().index(sk.name)
@@ -88,6 +93,17 @@ def transfer_shape_keys(
                 )
             sk.value = 0.0
 
+            new_sk = tgt_obj.data.shape_keys.key_blocks[-1]
+            
+            if create_drivers:
+                shape_key_add_binding_driver(
+                    sk=new_sk,
+                    src_obj=from_obj,
+                    src_sk_name=sk.name
+                )
+
+            result[tgt_obj.name].append(new_sk.name)
+
         tgt_obj.active_shape_key_index = tgt_obj_active_shape_key_index
         tgt_obj.show_only_shape_key = tgt_obj_show_only_shape_key
         tgt_obj.modifiers.remove(deformer)
@@ -97,5 +113,6 @@ def transfer_shape_keys(
         index = from_obj.data.shape_keys.key_blocks.find(noise_key_name)
         if index > 0:
             from_obj.active_shape_key_index = index
-            bpy.ops.object.shape_key_remove() 
-   
+            bpy.ops.object.shape_key_remove()
+
+    return result

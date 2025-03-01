@@ -48,15 +48,33 @@ def bind_shape_key_values(
     context: bpy.types.Context,
     tgt_obj: bpy.types.Object,
     src_obj: bpy.types.Object,
-    shape_keys: List[str]
+    shape_keys: List[str] | None = None
 ) -> None:
     if tgt_obj.data.shape_keys is None or src_obj.data.shape_keys is None:
         return
     for src_sk in src_obj.data.shape_keys.key_blocks:
-        if shape_keys is None or src_sk.name not in shape_keys:
+        if shape_keys is not None and src_sk.name not in shape_keys:
             continue
         sk = tgt_obj.data.shape_keys.key_blocks.get(src_sk.name, None)
         if sk is None:
             continue
 
         shape_key_add_binding_driver(sk=sk, src_obj=src_obj, src_sk_name=src_sk.name)
+
+
+def remove_shape_key_drivers(
+        context: bpy.types.Context,
+        obj: bpy.types.Object,
+        shape_keys: List[str] | None = None
+) -> None:
+    if obj.data.shape_keys is None:
+        # No shape keys to clear from drivers
+        return
+    
+    for sk in obj.data.shape_keys.key_blocks:
+        if shape_keys is not None and sk.name not in shape_keys:
+            continue
+        
+        sk.driver_remove('value')
+        sk.driver_remove('slider_min')
+        sk.driver_remove('slider_max')
