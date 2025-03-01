@@ -66,6 +66,7 @@ def transfer_shape_keys(
                 if index > 0:
                     from_obj.active_shape_key_index = index
                     bpy.ops.object.shape_key_remove()
+            tgt_obj.modifiers.remove(deformer)
             raise IsNotBoundException()
         
         for sk in from_obj.data.shape_keys.key_blocks[1:]:

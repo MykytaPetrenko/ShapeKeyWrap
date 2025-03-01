@@ -187,8 +187,8 @@ class SKW_PT_object_mode(bpy.types.Panel):
             sub_box = box.box()
             sub_box.label(text='Validate:', icon='MOD_SMOOTH')
             sub_col = sub_box.column(align=True)
-            sub_col.operator(SKW_OT_validate_edges.bl_idname, text='Check Edges (3+ linked faces)')
-            sub_col.operator(SKW_OT_validate_faces.bl_idname, text='Check Faces (Concave)')
+            sub_col.operator(SKW_OT_validate_edges.bl_idname, text='Check Edges (3+ linked faces)', icon='EDGESEL')
+            sub_col.operator(SKW_OT_validate_faces.bl_idname, text='Check Faces (Concave)', icon='FACESEL')
 
         
         box = layout.box()
