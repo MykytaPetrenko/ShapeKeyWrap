@@ -4,7 +4,7 @@ from .skw_operators import (
     SKW_OT_refresh_shape_keys,
     SKW_OT_bind_shape_key_values,
     SKW_OT_remove_drivers,
-    SKW_OT_delete_empty_shape_keys,
+    SKW_OT_remove_empty_shape_keys,
     SKW_OT_smooth_shape_keys,
     skw_poll
 )
@@ -79,41 +79,42 @@ class SKT_PT_object_mode(bpy.types.Panel):
 
         draw_poll(context, layout)
         box = layout.box()
-        if dropdown(box, skw, 'show_transfer_block', 'Transfer Shape Keys', icon='MOD_DATA_TRANSFER'):
+        if dropdown(box, skw, 'show_transfer_panel', 'Transfer Shape Keys', icon='MOD_DATA_TRANSFER'):
             col = box.column()
-            if skw.bind_noise:
-                sub_col = col.column(align=True)
-                sub_col.separator()
-                sub_col.prop(skw, 'bind_noise', text='Bind Noise')
+            if skw.use_bind_noise:
+                sub_box = col.box()
                 
+                sub_box.prop(skw, 'use_bind_noise', text='Use Bind Noise')
+                sub_col = sub_box.column(align=True)
                 sub_col.prop(skw, 'min_noise', text='Min Noise')
                 sub_col.prop(skw, 'max_noise', text='Max Noise')
-                sub_col.separator()
+
             else:
-                col.prop(skw, 'bind_noise', text='Bind Noise')
+                col.prop(skw, 'use_bind_noise', text='Use Bind Noise')
                     
-            col.prop(skw, 'bind_values', text='Add Drivers')
+            col.prop(skw, 'bind_drivers', text='Add Drivers')
             
-            col.prop(skw, 'overwrite_shapekeys', text='!Overwrite Shape Keys')
+            col.prop(skw, 'overwrite_shape_keys', text='!Overwrite Shape Keys')
             
-            if skw.delete_empty:
-                sub_col = col.column(align=True)
-                sub_col.separator()
-                sub_col.prop(skw, 'delete_empty', text='Delete Empty')
-                sub_col.prop(skw, 'empty_threshold', text='Threshold')
-                sub_col.separator()
+            if skw.remove_empty_shape_keys:
+                
+                sub_box = col.box()
+                sub_box.prop(skw, 'remove_empty_shape_keys', text='Delete Empty')
+                sub_box.prop(skw, 'empty_threshold', text='Threshold')
+
             else:
-                col.prop(skw, 'delete_empty', text='Delete Empty')
+                col.prop(skw, 'remove_empty_shape_keys', text='Delete Empty')
             
             if skw.smooth_shape_keys:
-                sub_col = col.column(align=True)
-                sub_col.separator()
-                sub_col.prop(skw, 'smooth_shape_keys', text='Smooth')
+                sub_box = col.box()
+                sub_box.prop(skw, 'smooth_shape_keys', text='Smooth')
+
+                sub_col = sub_box.column(align=True)
                 sub_col.prop(skw, 'cs_factor', text='Factor')
                 sub_col.prop(skw, 'cs_iterations', text='Iterations')
                 sub_col.prop(skw, 'cs_scale', text='Scale')
-                sub_col.prop(skw, 'cs_smooth_type', text='Method')
-                sub_col.separator()
+
+                sub_box.prop(skw, 'cs_smooth_type', text='Method')
             else:
                 col.prop(skw, 'smooth_shape_keys', text='Smooth')
 
@@ -121,15 +122,15 @@ class SKT_PT_object_mode(bpy.types.Panel):
             split.scale_y = 2.0
             
             split.operator(SKW_OT_transfer_shape_keys.bl_idname, text='Transfer Shape Keys', icon='ARROW_LEFTRIGHT')
-            split.prop(skw, 'transfer_by_list', text='Use List', toggle=True)
+            split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
         
         box = layout.box()
-        if dropdown(box, skw, 'show_utils_block', 'Utils', icon='TOOL_SETTINGS'):
+        if dropdown(box, skw, 'show_utilities_panel', 'Utils', icon='TOOL_SETTINGS'):
             sub_box = box.box()
             sub_box.label(text='Add Drivers')
             sub_box.operator(SKW_OT_bind_shape_key_values.bl_idname, text='Add Drivers')
             if len(context.selected_objects) > 1:
-                row = layout.row(align=False)
+                row = box.row(align=False)
                 col=row.column(align=True)
                 col.scale_y = 2.0
                 col.label(icon='INFO')
@@ -142,7 +143,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
             sub_box.label(text='Delete Drivers:')
             split = sub_box.split(factor=0.75, align=True)
             split.operator(SKW_OT_remove_drivers.bl_idname, text='Delete')
-            split.prop(skw, 'transfer_by_list', text='Use List', toggle=True)
+            split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
             
             
             # 'Delete empty' block
@@ -150,8 +151,8 @@ class SKT_PT_object_mode(bpy.types.Panel):
             sub_box.label(text='Delete Empty Shape Keys:')
             sub_box.prop(skw, 'empty_threshold', text='Threshold')
             split = sub_box.split(factor=0.75, align=True)
-            split.operator(SKW_OT_delete_empty_shape_keys.bl_idname, text='Delete')
-            split.prop(skw, 'transfer_by_list', text='Use List', toggle=True)
+            split.operator(SKW_OT_remove_empty_shape_keys.bl_idname, text='Delete')
+            split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
             
             # 'Corrective smooth' block
             sub_box = box.box()
@@ -163,18 +164,18 @@ class SKT_PT_object_mode(bpy.types.Panel):
             col.prop(skw, 'cs_factor', text='Factor')
             col.prop(skw, 'cs_iterations', text='Iterations')
             col.prop(skw, 'cs_scale', text='Scale')
-            col.prop(skw, 'overwrite_shapekeys', text='!Overwrite Shape Keys')
+            col.prop(skw, 'overwrite_shape_keys', text='!Overwrite Shape Keys')
             
             split = sub_box.split(factor=0.75, align=True)
             split.operator(SKW_OT_smooth_shape_keys.bl_idname, text='Smooth Shape Keys')
-            split.prop(skw, 'transfer_by_list', text='Use List', toggle=True)
+            split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
 
         
         box = layout.box()
-        if dropdown(box, skw, 'show_shape_key_list', 'Shape Key List', icon='SHAPEKEY_DATA'):
+        if dropdown(box, skw, 'show_shape_key_list_panel', 'Shape Key List', icon='SHAPEKEY_DATA'):
             col = box.column(align=True)
             col.label(text='List of Shape Keys:')
-            col.enabled = skw.transfer_by_list
+            col.enabled = skw.use_shape_key_list
             col.template_list(
                 'SKT_UL_items', '',
                 skw_sk_list, 'shape_keys_to_process',

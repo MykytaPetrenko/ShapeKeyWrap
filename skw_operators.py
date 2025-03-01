@@ -1,7 +1,7 @@
 import bpy
 import traceback
 from .functions.bind_drivers import bind_shape_key_values, remove_shape_key_drivers
-from .functions.delete_empty import delete_empty_shape_keys
+from .functions.remove_empty_shape_keys import remove_empty_shape_keys
 from .functions.transfer_shape_keys import transfer_shape_keys, IsNotBoundException
 from .functions.smooth_shape_keys import smooth_shape_keys
 
@@ -38,7 +38,7 @@ def execute_shape_key_wrap(self, context: bpy.types.Context) -> None:
     skw_sk_list = active.data.skw_sk_list
     skw = context.scene.skw_prop   
     
-    shape_keys = skw_sk_list.get_enabled_list() if skw.transfer_by_list else None
+    shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
 
     created_sks = transfer_shape_keys(
         context=context,
@@ -46,17 +46,17 @@ def execute_shape_key_wrap(self, context: bpy.types.Context) -> None:
         to_objs=tgt_objs,
         falloff=skw.sd_falloff,
         strength=skw.sd_strength,
-        overwrite_shape_keys=skw.overwrite_shapekeys,
+        overwrite_shape_keys=skw.overwrite_shape_keys,
         shape_keys=shape_keys,
-        bind_noise=(skw.min_noise, skw.max_noise) if skw.bind_noise else None,
-        create_drivers=skw.bind_values
+        bind_noise=(skw.min_noise, skw.max_noise) if skw.use_bind_noise else None,
+        create_drivers=skw.bind_drivers
     )
 
     # Optionally remove empty shape keys
-    if skw.delete_empty:
+    if skw.remove_empty_shape_keys:
         nullshapekeysdeleted = 0
         for obj in tgt_objs:
-            res = delete_empty_shape_keys(context, obj, skw.empty_threshold, shape_keys)
+            res = remove_empty_shape_keys(context, obj, skw.empty_threshold, shape_keys)
             nullshapekeysdeleted += res
         
         if nullshapekeysdeleted == 0:
@@ -174,7 +174,7 @@ class SKW_OT_refresh_shape_keys(bpy.types.Operator):
 
 
 class SKW_OT_bind_shape_key_values(bpy.types.Operator):
-    bl_idname = 'shape_key_wrap.bind_values'
+    bl_idname = 'shape_key_wrap.bind_drivers'
     bl_label = 'Bind Values Shape Keys By Name'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
@@ -203,7 +203,7 @@ class SKW_OT_bind_shape_key_values(bpy.types.Operator):
             skw_sk_list = active.data.skw_sk_list
             skw = context.scene.skw_prop
 
-            shape_keys = skw_sk_list.get_enabled_list() if skw.transfer_by_list else None
+            shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
             
             for tgt_obj in tgt_objs:
                 bind_shape_key_values(context, tgt_obj, from_obj, shape_keys)
@@ -248,7 +248,7 @@ class SKW_OT_remove_drivers(bpy.types.Operator):
             skw_sk_list = obj.data.skw_sk_list
             skw = context.scene.skw_prop
 
-            shape_keys = skw_sk_list.get_enabled_list() if skw.transfer_by_list else None
+            shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
 
             remove_shape_key_drivers(context, obj, shape_keys)
         except Exception as ex:
@@ -258,8 +258,8 @@ class SKW_OT_remove_drivers(bpy.types.Operator):
         return {"FINISHED"}
     
 
-class SKW_OT_delete_empty_shape_keys(bpy.types.Operator):
-    bl_idname = 'shape_key_wrap.delete_empty_shape_keys'
+class SKW_OT_remove_empty_shape_keys(bpy.types.Operator):
+    bl_idname = 'shape_key_wrap.remove_empty_shape_keys'
     bl_label = 'Remove Empty Shape Keys from an active object'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
@@ -288,9 +288,9 @@ class SKW_OT_delete_empty_shape_keys(bpy.types.Operator):
             skw_sk_list = obj.data.skw_sk_list
             skw = context.scene.skw_prop
 
-            shape_keys = skw_sk_list.get_enabled_list() if skw.transfer_by_list else None
+            shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
 
-            delete_empty_shape_keys(context, obj, self.empty_threshold, shape_keys)
+            remove_empty_shape_keys(context, obj, self.empty_threshold, shape_keys)
 
             bpy.ops.shape_key_wrap.refresh_list(action='REFRESH')
         except Exception as ex:
@@ -328,7 +328,7 @@ class SKW_OT_smooth_shape_keys(bpy.types.Operator):
             skw_sk_list = obj.data.skw_sk_list
             skw = context.scene.skw_prop
 
-            shape_keys = skw_sk_list.get_enabled_list() if skw.transfer_by_list else None
+            shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
 
             smooth_shape_keys(
                 context,
@@ -337,7 +337,7 @@ class SKW_OT_smooth_shape_keys(bpy.types.Operator):
                 iterations=skw.cs_iterations,
                 scale=skw.cs_scale,
                 smooth_type=skw.cs_smooth_type,
-                overwrite_shape_keys=skw.overwrite_shapekeys,
+                overwrite_shape_keys=skw.overwrite_shape_keys,
                 shape_keys=shape_keys
             )
 
@@ -355,7 +355,7 @@ CLASSES = [
     SKW_OT_refresh_shape_keys,
     SKW_OT_bind_shape_key_values,
     SKW_OT_remove_drivers,
-    SKW_OT_delete_empty_shape_keys,
+    SKW_OT_remove_empty_shape_keys,
     SKW_OT_smooth_shape_keys
 ]
 

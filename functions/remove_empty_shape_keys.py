@@ -2,7 +2,7 @@ import bpy
 from typing import List
 
 
-def delete_empty_shape_keys(
+def remove_empty_shape_keys(
         context: bpy.types.Context,
         obj: bpy.types.Object,
         empty_threshold: float,
