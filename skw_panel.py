@@ -8,6 +8,10 @@ from .skw_operators import (
     SKW_OT_smooth_shape_keys,
     skw_poll
 )
+from .skw_validate_mesh import (
+    SKW_OT_validate_edges,
+    SKW_OT_validate_faces
+)
 
 
 def dropdown(
@@ -34,7 +38,7 @@ def dropdown(
     return getattr(config, attribute)
 
 
-class SKT_UL_items(bpy.types.UIList):
+class SKW_UL_items(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row()
         row.label(text=item.name, icon='SHAPEKEY_DATA')
@@ -52,7 +56,7 @@ def draw_poll(context: bpy.types.Context, layout: bpy.types.UILayout) -> None:
         layout.label(text=reason)
 
 
-class SKT_PT_object_mode(bpy.types.Panel):
+class SKW_PT_object_mode(bpy.types.Panel):
     """
     Addon main menu (N-Panel)
     """
@@ -81,17 +85,26 @@ class SKT_PT_object_mode(bpy.types.Panel):
         box = layout.box()
         if dropdown(box, skw, 'show_transfer_panel', 'Transfer Shape Keys', icon='MOD_DATA_TRANSFER'):
             col = box.column()
-            if skw.use_bind_noise:
-                sub_box = col.box()
-                
-                sub_box.prop(skw, 'use_bind_noise', text='Use Bind Noise')
-                sub_col = sub_box.column(align=True)
-                sub_col.prop(skw, 'min_noise', text='Min Noise')
-                sub_col.prop(skw, 'max_noise', text='Max Noise')
-
-            else:
-                col.prop(skw, 'use_bind_noise', text='Use Bind Noise')
+            col.label(text='Surface Deform Parameters')            
+            col.prop(skw, 'surface_deform_method', text='Method')
+            
+            if skw.surface_deform_method != 'SQUEEZY_PIXELS':
+                if skw.use_bind_noise:
+                    noise_box = col.box()
                     
+                    noise_box.prop(skw, 'use_bind_noise', text='Use Bind Noise')
+                    sub_col = noise_box.column(align=True)
+                    sub_col.prop(skw, 'min_noise', text='Min Noise')
+                    sub_col.prop(skw, 'max_noise', text='Max Noise')
+
+                else:
+                    col.prop(skw, 'use_bind_noise', text='Use Bind Noise')
+
+                col.prop(skw, 'sd_falloff', text='Falloff')
+                col.prop(skw, 'sd_strength', text='Strength')
+                    
+            col.separator()
+            col.label(text='Additional Parameters')    
             col.prop(skw, 'bind_drivers', text='Add Drivers')
             
             col.prop(skw, 'overwrite_shape_keys', text='!Overwrite Shape Keys')
@@ -107,7 +120,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
             
             if skw.smooth_shape_keys:
                 sub_box = col.box()
-                sub_box.prop(skw, 'smooth_shape_keys', text='Smooth')
+                sub_box.prop(skw, 'smooth_shape_keys', text='Corrective Smooth')
 
                 sub_col = sub_box.column(align=True)
                 sub_col.prop(skw, 'cs_factor', text='Factor')
@@ -170,6 +183,13 @@ class SKT_PT_object_mode(bpy.types.Panel):
             split.operator(SKW_OT_smooth_shape_keys.bl_idname, text='Smooth Shape Keys')
             split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
 
+            # Validate block
+            sub_box = box.box()
+            sub_box.label(text='Validate:', icon='MOD_SMOOTH')
+            sub_col = sub_box.column(align=True)
+            sub_col.operator(SKW_OT_validate_edges.bl_idname, text='Check Edges (3+ linked faces)')
+            sub_col.operator(SKW_OT_validate_faces.bl_idname, text='Check Faces (Concave)')
+
         
         box = layout.box()
         if dropdown(box, skw, 'show_shape_key_list_panel', 'Shape Key List', icon='SHAPEKEY_DATA'):
@@ -177,7 +197,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
             col.label(text='List of Shape Keys:')
             col.enabled = skw.use_shape_key_list
             col.template_list(
-                'SKT_UL_items', '',
+                'SKW_UL_items', '',
                 skw_sk_list, 'shape_keys_to_process',
                 skw_sk_list, 'shape_key_index',
                 rows=5
@@ -192,7 +212,7 @@ class SKT_PT_object_mode(bpy.types.Panel):
             
 
 
-classes = [SKT_PT_object_mode, SKT_UL_items]
+classes = [SKW_PT_object_mode, SKW_UL_items]
 
 
 def register():

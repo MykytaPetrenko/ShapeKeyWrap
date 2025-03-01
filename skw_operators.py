@@ -4,6 +4,7 @@ from .functions.bind_drivers import bind_shape_key_values, remove_shape_key_driv
 from .functions.remove_empty_shape_keys import remove_empty_shape_keys
 from .functions.transfer_shape_keys import transfer_shape_keys, IsNotBoundException
 from .functions.smooth_shape_keys import smooth_shape_keys
+from .functions.surface_deform import transfer_shapekeys
 
 
 REFRESH_LIST_OPTION = [
@@ -40,17 +41,35 @@ def execute_shape_key_wrap(self, context: bpy.types.Context) -> None:
     
     shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
 
-    created_sks = transfer_shape_keys(
-        context=context,
-        from_obj=active,
-        to_objs=tgt_objs,
-        falloff=skw.sd_falloff,
-        strength=skw.sd_strength,
-        overwrite_shape_keys=skw.overwrite_shape_keys,
-        shape_keys=shape_keys,
-        bind_noise=(skw.min_noise, skw.max_noise) if skw.use_bind_noise else None,
-        create_drivers=skw.bind_drivers
-    )
+    if skw.surface_deform_method == 'SQUEEZY_PIXELS':
+        created_sks = dict()
+        for obj in tgt_objs:
+            created_sks_for_obj = transfer_shapekeys(
+                context=context,
+                tgt_obj=obj,
+                src_obj=active,
+                shape_keys=shape_keys,
+                overwrite_shape_keys=skw.overwrite_shape_keys
+            )
+            created_sks[obj.name] = created_sks_for_obj
+
+            if not skw.bind_drivers:
+                continue
+            # Create drivers if necessary
+            bind_shape_key_values(context, obj, active, created_sks_for_obj)
+    else:
+        created_sks = transfer_shape_keys(
+            context=context,
+            from_obj=active,
+            to_objs=tgt_objs,
+            falloff=skw.sd_falloff,
+            strength=skw.sd_strength,
+            overwrite_shape_keys=skw.overwrite_shape_keys,
+            shape_keys=shape_keys,
+            bind_noise=(skw.min_noise, skw.max_noise) if skw.use_bind_noise else None,
+            create_drivers=skw.bind_drivers
+        )
+        
 
     # Optionally remove empty shape keys
     if skw.remove_empty_shape_keys:

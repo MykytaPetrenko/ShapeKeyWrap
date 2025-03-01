@@ -2,6 +2,7 @@ import bpy
 from . import skw_panel
 from . import skw_operators
 from . import skw_props
+from . import skw_validate_mesh
 
 
 bl_info = {
@@ -16,7 +17,7 @@ bl_info = {
     'category': 'Mesh'
 }
 
-MODULES = [skw_panel, skw_operators, skw_props]
+MODULES = [skw_props, skw_panel, skw_operators, skw_validate_mesh]
 
 
 def register():
@@ -29,5 +30,5 @@ def unregister():
         module.unregister()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     register()

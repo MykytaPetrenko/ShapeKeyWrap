@@ -3,8 +3,13 @@ from typing import List
 
 
 SMOOTH_TYPES = [
-    ('SIMPLE', 'Simple', 'Use the average of adjacent edge-vertices.', 1),
-    ('LENGTH_WEIGHTED', 'Length Weight', 'Use the average of adjacent edge-vertices weighted by their length.', 2)
+    ('SIMPLE', 'Simple', 'Use the average of adjacent edge-vertices', 1),
+    ('LENGTH_WEIGHTED', 'Length Weight', 'Use the average of adjacent edge-vertices weighted by their length', 2)
+]
+
+SURFACE_DEFORM_METHODS = [
+    ('BLENDER', 'Blender', "Standard Blender's Surface Deform Modifier", 1),
+    ('SQUEEZY_PIXELS', 'Squeezy Pixels', "Custom Surface Deform Modifier by Squeezy Pixels (Mykyta Petrenko)", 2)
 ]
 
 
@@ -43,12 +48,19 @@ class SKW_ShapeKeyList(bpy.types.PropertyGroup):
 
 
 class SKW_Property(bpy.types.PropertyGroup):
+
+    surface_deform_method: bpy.props.EnumProperty(
+        items=SURFACE_DEFORM_METHODS,
+        name='Surface Deform Method',
+        description='Method used for transferring shape keys (Surface Deform)',
+        default='BLENDER'
+    )
     use_shape_key_list: bpy.props.BoolProperty(
         default=False,
         description=(
             'If disabled, all shape keys will be processed. '
             'If enabled, only the shape keys selected in the list at the bottom '
-            'of the ShapeKeyWrap menu will be processed.'
+            'of the ShapeKeyWrap menu will be processed'
         )
     )
     use_bind_noise: bpy.props.BoolProperty(
@@ -58,40 +70,40 @@ class SKW_Property(bpy.types.PropertyGroup):
             "Adds random offsets to each vertex position before binding. "
             "Often helps fix the 'Unable to bind' error if no other issues exist "
             "(such as concave faces, edges with more than two faces, overlapping vertices, "
-            "or faces with collinear edges)."
+            "or faces with collinear edges)"
         )
     )
     min_noise: bpy.props.FloatProperty(
         default=-0.0001,
         name='Minimal Surface Deform Binding Noise',
-        description='Lower bound for the random vertex offset used during binding.',
+        description='Lower bound for the random vertex offset used during binding',
         precision=5
     )
     max_noise: bpy.props.FloatProperty(
         default=0.0001,
         precision=5,
         name='Maximal Surface Deform Binding Noise',
-        description='Upper bound for the random vertex offset used during binding.'
+        description='Upper bound for the random vertex offset used during binding'
     )
 
     show_transfer_panel: bpy.props.BoolProperty(
         default=True,
-        description='Show or hide the Transfer Shape Keys panel.'
+        description='Show or hide the Transfer Shape Keys panel'
     )
     show_utilities_panel: bpy.props.BoolProperty(
         default=False,
-        description='Show or hide the Utilities panel.'
+        description='Show or hide the Utilities panel'
     )
     show_shape_key_list_panel: bpy.props.BoolProperty(
         default=False,
-        description='Show or hide the Shape Key List panel.'
+        description='Show or hide the Shape Key List panel'
     )
     
     bind_drivers: bpy.props.BoolProperty(
         name='Bind Drivers',
         description=(
             "When enabled, the addon will create drivers that link the target shape "
-            "key values to the source shape key values."
+            "key values to the source shape key values"
         ),
         default=True
     )
@@ -107,7 +119,7 @@ class SKW_Property(bpy.types.PropertyGroup):
         precision=5,
         description=(
             "Shape keys whose vertices do not move beyond this threshold "
-            "will be considered empty and removed."
+            "will be considered empty and removed"
         )
     )
 
@@ -117,7 +129,7 @@ class SKW_Property(bpy.types.PropertyGroup):
             "When enabled, any existing shape keys on the target mesh will be replaced "
             "by the newly transferred shape keys. If disabled, the transferred shape keys "
             "will be appended as separate shape keys (e.g., 'muscular.001'). "
-            "Use with caution - this can irreversibly delete original shape key data."
+            "Use with caution - this can irreversibly delete original shape key data"
         ),
         default=False
     )
@@ -125,37 +137,37 @@ class SKW_Property(bpy.types.PropertyGroup):
     smooth_shape_keys: bpy.props.BoolProperty(
         name='Smooth Shape Keys',
         description=(
-            'When enabled, apply a Corrective Smooth pass to shape keys after they are transferred.'
+            'When enabled, apply a Corrective Smooth pass to shape keys after they are transferred'
         ),
         default=False
     )
     sd_falloff: bpy.props.FloatProperty(
         name='Interpolation Falloff',
-        description='Sets the interpolation falloff for the Surface Deform modifier.',
+        description='Sets the interpolation falloff for the Surface Deform modifier',
         default=4, min=2, max=14
     )
 
     sd_strength: bpy.props.FloatProperty(
         name='Strength',
-        description='Controls the overall strength of the Surface Deform modifier.',
+        description='Controls the overall strength of the Surface Deform modifier',
         default=1, min=-100, max=100
     )
 
     cs_factor: bpy.props.FloatProperty(
         name='Factor',
-        description='Amount of smoothing to apply in the Corrective Smooth modifier.',
+        description='Amount of smoothing to apply in the Corrective Smooth modifier',
         default=0.5, min=0, max=1.0
     )
 
     cs_iterations: bpy.props.IntProperty(
         name='Iterations',
-        description='Number of smoothing iterations to perform in the Corrective Smooth modifier.',
+        description='Number of smoothing iterations to perform in the Corrective Smooth modifier',
         default=5, min=0, max=200
     )
 
     cs_scale: bpy.props.FloatProperty(
         name='Scale',
-        description='Scale factor used by the Corrective Smooth modifier.',
+        description='Scale factor used by the Corrective Smooth modifier',
         default=1.0,
         min=0.0, max=10
     )
@@ -163,7 +175,7 @@ class SKW_Property(bpy.types.PropertyGroup):
     cs_smooth_type: bpy.props.EnumProperty(
         items=SMOOTH_TYPES,
         name='Smooth Type',
-        description='Method used for smoothing (Simple or Length Weight) in the Corrective Smooth modifier.',
+        description='Method used for smoothing (Simple or Length Weight) in the Corrective Smooth modifier',
         default='SIMPLE'
     )
 
