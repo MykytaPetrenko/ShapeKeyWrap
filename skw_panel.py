@@ -129,7 +129,7 @@ class SKW_PT_object_mode(bpy.types.Panel):
 
                 sub_box.prop(skw, 'cs_smooth_type', text='Method')
             else:
-                col.prop(skw, 'smooth_shape_keys', text='Smooth')
+                col.prop(skw, 'smooth_shape_keys', text='Corrective Smooth')
 
             split = box.split(factor=0.75, align=True)
             split.scale_y = 2.0
