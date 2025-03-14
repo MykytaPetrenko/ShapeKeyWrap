@@ -5,6 +5,7 @@ from .functions.remove_empty_shape_keys import remove_empty_shape_keys
 from .functions.transfer_shape_keys import transfer_shape_keys, IsNotBoundException
 from .functions.smooth_shape_keys import smooth_shape_keys
 from .functions.surface_deform import transfer_shapekeys
+from .functions.restore_details import restore_details
 
 
 REFRESH_LIST_OPTION = [
@@ -124,7 +125,6 @@ def skw_poll(context: bpy.types.Context):
         return True, f'From: {active.name}\nTo: {obj_count} other objects'
 
 
-# gets called when transfer button clicked
 class SKW_OT_transfer_shape_keys(bpy.types.Operator):
     bl_idname = "shape_key_wrap.transfer_shape_keys"
     bl_label = "Execute"
@@ -153,6 +153,53 @@ class SKW_OT_transfer_shape_keys(bpy.types.Operator):
             self.report({"ERROR"}, str(ex))
             print(traceback.format_exc())
             active_sk_state.restore(from_obj)
+            return {"CANCELLED"}
+        return {"FINISHED"}
+    
+
+# gets called when transfer button clicked
+class SKW_OT_restore_original_details(bpy.types.Operator):
+    bl_idname = "shape_key_wrap.restore_original_details"
+    bl_label = "Restore Details"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'WINDOW'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    process_active_only: bpy.props.BoolProperty(default=False)
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.type == 'MESH'
+
+    def execute(self, context):
+        obj = context.active_object
+
+        active_sk_state = ObjectShapeKeyState(obj)
+        try:
+            skw = context.scene.skw_prop
+            
+            if self.process_active_only:
+                shape_keys = [obj.active_shape_key.name]
+            else:
+                skw_sk_list = obj.data.skw_sk_list   
+            
+                shape_keys = skw_sk_list.get_enabled_list() if skw.use_shape_key_list else None
+            restore_details(
+                context=context,
+                obj=obj,
+                vertex_group=skw.rd_vertex_group,
+                factor=skw.rd_cs_factor,
+                iterations=skw.rd_cs_iterations,
+                scale=skw.rd_cs_scale,
+                smooth_type=skw.rd_cs_smooth_type,
+                overwrite_shape_keys=skw.overwrite_shape_keys,
+                shape_keys=shape_keys
+            )
+            active_sk_state.restore(obj)
+        except Exception as ex:
+            self.report({"ERROR"}, str(ex))
+            print(traceback.format_exc())
+            active_sk_state.restore(obj)
             return {"CANCELLED"}
         return {"FINISHED"}
 
@@ -375,7 +422,8 @@ CLASSES = [
     SKW_OT_bind_shape_key_values,
     SKW_OT_remove_drivers,
     SKW_OT_remove_empty_shape_keys,
-    SKW_OT_smooth_shape_keys
+    SKW_OT_smooth_shape_keys,
+    SKW_OT_restore_original_details
 ]
 
 

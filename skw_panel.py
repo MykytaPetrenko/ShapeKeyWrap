@@ -6,6 +6,7 @@ from .skw_operators import (
     SKW_OT_remove_drivers,
     SKW_OT_remove_empty_shape_keys,
     SKW_OT_smooth_shape_keys,
+    SKW_OT_restore_original_details,
     skw_poll
 )
 from .skw_validate_mesh import (
@@ -190,6 +191,20 @@ class SKW_PT_object_mode(bpy.types.Panel):
             sub_col.operator(SKW_OT_validate_edges.bl_idname, text='Check Edges (3+ linked faces)', icon='EDGESEL')
             sub_col.operator(SKW_OT_validate_faces.bl_idname, text='Check Faces (Concave)', icon='FACESEL')
 
+            # Restore details block
+            sub_box = box.box()
+            sub_box.label(text='Restore Details:')
+            sub_col = sub_box.column(align=True)
+            sub_col.prop(skw, 'rd_vertex_group')
+            sub_col.prop(skw, 'rd_cs_factor')
+            sub_col.prop(skw, 'rd_cs_iterations')
+            # sub_col.prop(skw, 'rd_cs_scale')  # Almost never used
+            sub_col.prop(skw, 'rd_cs_smooth_type')
+            sub_col.prop(skw, 'overwrite_shape_keys')
+
+            sub_col = sub_box.column(align=True)
+            sub_col.operator(SKW_OT_restore_original_details.bl_idname, text='Restore Batch').process_active_only = False
+            sub_col.operator(SKW_OT_restore_original_details.bl_idname, text='Restore Active Only').process_active_only = True
         
         box = layout.box()
         if dropdown(box, skw, 'show_shape_key_list_panel', 'Shape Key List', icon='SHAPEKEY_DATA'):

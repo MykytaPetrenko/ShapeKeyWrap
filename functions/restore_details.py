@@ -2,46 +2,40 @@ import bpy
 from typing import List
 
 
-def smooth_shape_keys(
+def restore_details(
         context: bpy.types.Context,
         obj: bpy.types.Object,
-        factor: float = 0.5,
-        iterations: int = 5,
+        vertex_group: str,
+        factor: float = 1.0,
+        iterations: int = 20,
         scale: float = 1.0,
         smooth_type: str = 'SIMPLE',
         overwrite_shape_keys: bool = False,
         shape_keys: List[str] | None = None
 ) -> None:
-    """
-    smooth_type:
-    Method used for smoothing
-        'SIMPLE' Simple - Use the average of adjacent edge-vertices.
-        'LENGTH_WEIGHTED' Length Weight - Use the average of adjacent edge-vertices weighted by their length.
-    """
-    # obj.show_only_shape_key = False
-    # for sk in obj.data.shape_keys.key_blocks:
-    #     sk.value = 0.0  
-    
     obj_show_only_shape_key = obj.show_only_shape_key
     obj_active_shape_key_index = obj.active_shape_key_index
+
     obj.active_shape_key_index = 0
     obj.show_only_shape_key = True
 
-    mod = obj.modifiers.new(name='Corrective Smooth', type='CORRECTIVE_SMOOTH')
+    mod: bpy.types.CorrectiveSmoothModifier = obj.modifiers.new(name='Corrective Smooth', type='CORRECTIVE_SMOOTH')
     mod.factor = factor
     mod.iterations = iterations
     mod.smooth_type = smooth_type
     mod.scale = scale
+    mod.vertex_group = vertex_group
 
     with context.temp_override(object=obj):
         bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
-    
+
     sk_names = [sk.name for sk in obj.data.shape_keys.key_blocks[1:]]
     for sk_name in sk_names:
         
         sk = obj.data.shape_keys.key_blocks.get(sk_name)
         if shape_keys is not None and sk.name not in shape_keys:
             continue
+        
         # Set SK index
         obj.active_shape_key_index = obj.data.shape_keys.key_blocks.keys().index(sk_name)
         
@@ -70,7 +64,7 @@ def smooth_shape_keys(
             # Note. We do not remove old shape key renaming the new one to keep the original order
                 
         else:
-            new_sk.name = f'CS_{sk_name}'
+            new_sk.name = f'RD_{sk_name}'
 
     obj.active_shape_key_index = obj_active_shape_key_index
     obj.show_only_shape_key = obj_show_only_shape_key

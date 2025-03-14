@@ -179,6 +179,37 @@ class SKW_Property(bpy.types.PropertyGroup):
         default='SIMPLE'
     )
 
+    rd_cs_factor: bpy.props.FloatProperty(
+        name='Factor',
+        description='Amount of smoothing to apply in the Corrective Smooth modifier used to restore details',
+        default=1.0, min=0, max=1.0
+    )
+
+    rd_cs_iterations: bpy.props.IntProperty(
+        name='Iterations',
+        description='Number of smoothing iterations to perform in the Corrective Smooth modifier used to restore details',
+        default=20, min=0, max=200
+    )
+
+    rd_cs_scale: bpy.props.FloatProperty(
+        name='Scale',
+        description='Scale factor used by the Corrective Smooth modifier used to restore details',
+        default=1.0,
+        min=0.0, max=10
+    )
+
+    rd_cs_smooth_type: bpy.props.EnumProperty(
+        items=SMOOTH_TYPES,
+        name='Smooth Type',
+        description='Method used for smoothing (Simple or Length Weight) in the Corrective Smooth modifier used to restore details',
+        default='SIMPLE'
+    )
+
+    rd_vertex_group: bpy.props.StringProperty(
+        name='Vertex Group to Restore Details',
+        description='Vertex Group to Restore Details',
+        default='Group'
+    )
 
 
 classes = [SKW_ListItem, SKW_Property, SKW_ShapeKeyList]
