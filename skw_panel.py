@@ -184,13 +184,6 @@ class SKW_PT_object_mode(bpy.types.Panel):
             split.operator(SKW_OT_smooth_shape_keys.bl_idname, text='Smooth Shape Keys')
             split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
 
-            # Validate block
-            sub_box = box.box()
-            sub_box.label(text='Validate:', icon='MOD_SMOOTH')
-            sub_col = sub_box.column(align=True)
-            sub_col.operator(SKW_OT_validate_edges.bl_idname, text='Check Edges (3+ linked faces)', icon='EDGESEL')
-            sub_col.operator(SKW_OT_validate_faces.bl_idname, text='Check Faces (Concave)', icon='FACESEL')
-
             # Restore details block
             sub_box = box.box()
             sub_box.label(text='Restore Details:')
@@ -203,8 +196,19 @@ class SKW_PT_object_mode(bpy.types.Panel):
             sub_col.prop(skw, 'overwrite_shape_keys')
 
             sub_col = sub_box.column(align=True)
-            sub_col.operator(SKW_OT_restore_original_details.bl_idname, text='Restore Batch').process_active_only = False
+            split = sub_col.split(factor=0.75, align=True)
+            split.operator(SKW_OT_restore_original_details.bl_idname, text='Restore Batch').process_active_only = False
+            split.prop(skw, 'use_shape_key_list', text='Use List', toggle=True)
             sub_col.operator(SKW_OT_restore_original_details.bl_idname, text='Restore Active Only').process_active_only = True
+
+            # Validate block
+            sub_box = box.box()
+            sub_box.label(text='Validate:', icon='MOD_SMOOTH')
+            sub_col = sub_box.column(align=True)
+            sub_col.operator(SKW_OT_validate_edges.bl_idname, text='Check Edges (3+ linked faces)', icon='EDGESEL')
+            sub_col.operator(SKW_OT_validate_faces.bl_idname, text='Check Faces (Concave)', icon='FACESEL')
+
+
         
         box = layout.box()
         if dropdown(box, skw, 'show_shape_key_list_panel', 'Shape Key List', icon='SHAPEKEY_DATA'):
