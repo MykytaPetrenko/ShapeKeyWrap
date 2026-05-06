@@ -1,6 +1,9 @@
 # Transfer shape keys in a couple clicks
 Blender addon for transfering shapekeys from on mesh to another one and binding thier values. There is another free addon that do almost the same with another algorythm (you may check it [here](https://github.com/fblah/ShapeKeyTransferBlender)), but sometimes it does not work properly. So have writen my own addon. It is very fast and simple (around a hundred lines of code).
 
+# Support the Development
+The addon is distributed for free, but you can support the dev via [Patreon](https://patreon.com/SqueezyPixels)
+
 # How to transfer Shape Keys
 1. Switch to object mode
 2. Select a target mesh or multiple meshes
