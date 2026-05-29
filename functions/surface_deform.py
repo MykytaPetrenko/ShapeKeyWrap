@@ -163,6 +163,7 @@ def transfer_shapekeys(
             if tgt_sk is None or not overwrite_shape_keys:
                 tgt_sk = tgt_obj.shape_key_add(name=sk_name, from_mix=False)
 
+        tgt_sk.value = sk.value
         flattened_coordinates = [value for co in new_coordinates for value in co[:]]
         # Ensure the length matches
         if len(flattened_coordinates) == 3 * len(tgt_sk.data):
