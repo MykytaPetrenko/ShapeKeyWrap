@@ -34,5 +34,5 @@ Join our [Discord Server to](https://discord.gg/zGDqh2CsbJ) share your feedback 
 Also visit my [youtube channel](https://www.youtube.com/@squeezypixels) and [gumroad page](https://squeezypixels.gumroad.com/l/shapekeywrap) If you liked the addon
 
 # Another Add-ons
-- **[MetaReForge](https://www.artstation.com/a/32654843)** - Paid add-on for Metahuman customization in blender
+- **[OmniMirror](https://www.artstation.com/a/55005989)** - Powerful symmetry workflow tools for Blender (paid).
 - **[JoinAsPose](https://github.com/MykytaPetrenko/JoinAsPose)** - Free add-on for attaching the rest pose from one/multiple source armatures to a single target armature.
