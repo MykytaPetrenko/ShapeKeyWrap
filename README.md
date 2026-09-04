@@ -13,10 +13,14 @@ The addon is distributed for free, but you can support the dev via [Patreon](htt
 4.2. If "Transfer By The List" option is activeted (toggle button is pressed) only checked shape keys from the list will be transferred. "Refresh" button refreshes the list of the shape keys in accordance to all the shape keys of the source object. "Check All" refreshes the list and checks all the shape keys. "Uncheck All" refreshes the list and uncheckes all the shapekeys. 
 5. N-panel > Tools > Shape Key Wrap > Click "Transfer Shape Keys".
 6. Adjust parameters if something goes wrong (most of the parameters are the parameters of surface deform modifier, the addon is based on it). If "Replace Shapekeys" is on, and target mesh have shape key with the same names as source mesh they will be replaced. Be carefull with the checkbox because the key shape data may be lost irrecoverably. "Bind Values" binds the values of target shape keys ot the values of the source shape keys via drivers.
-7. Optionally enable "Delete Empty". During a transfer, this scans only the shape keys created or replaced by that transfer. It removes a transferred key only when it has no displacement from the target mesh's Basis shape key. Existing target shape keys are not scanned or removed by this option.
+7. Optionally enable "Delete Empty" to remove transferred or replaced keys with no displacement from the target Basis. Existing target keys are not scanned.
+8. Optionally enable "Corrective Smooth" to smooth the transferred or replaced shape keys after transfer.
 
 # Remove Empty Shape Keys
-The "Delete Empty Shape Keys" action in the Utils panel is separate from transfer and works on the active object only. With "Use List" disabled, it scans every non-Basis shape key on that object. With "Use List" enabled, it scans only the checked shape keys. This action is not limited to keys created by a transfer, so use it when you intentionally want to clean up existing shape keys.
+The "Delete Empty Shape Keys" action in the Utils panel works on the active object and is independent of transfer. It scans every non-Basis key, or only checked keys when "Use List" is enabled.
+
+# Corrective Smooth Shape Keys
+"Corrective Smooth" smooths shape key deformations. During transfer it affects only transferred or replaced keys. The Utils action works on every non-Basis key of the active object, or only checked keys when "Use List" is enabled. Enable "Overwrite Shape Keys" to update the original keys; otherwise, new keys prefixed with `CS_` are created.
 
 # How to bind Shape Key values by names
 By default the add-on will bind shape key values with the shape keys. But you can easily do it separately. 
@@ -27,6 +31,7 @@ By default the add-on will bind shape key values with the shape keys. But you ca
 ## Unable to bind surface deform modifier error
 The problem is related to the inability to bind the surface deform modifier to the source mesh
 - Check out the blender [Surface Deform Modifier documentation](https://docs.blender.org/manual/en/latest/modeling/modifiers/deform/surface_deform.html) on target mesh validity and check your mesh. ShapeKeyWrap source is SurfaceDeform target so you need to check the mesh from which you transfer shape keys first of all. The most frequent problem is **"edges with more than two faces"**. **"concave faces"** is less frequent but also occurs. 
+- In the Utils panel, use "Check Edges (3+ linked faces)" and "Check Faces (Concave)" to find and select these problems on the active mesh. Inspect the selected elements in Edit Mode.
 - When there no other problems but you still getting the error. Experimentally I got this behavior when a lot of vertices of target and source mesh have the same coordinates. I have found a few solutions:
    - Disabling modifiers can sometimes resolve this issue.
    - Shifting vertices of one mesh very slightly. You can add such noise enabling "Bind Noise" feature. Very slight noise value sometimes helps.
