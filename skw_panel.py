@@ -162,7 +162,7 @@ class SKW_PT_object_mode(bpy.types.Panel):
             
             # 'Delete empty' block
             sub_box = box.box()
-            sub_box.label(text='Delete Empty Shape Keys:')
+            sub_box.label(text='Delete Empty Shape Keys (active object):')
             sub_box.prop(skw, 'empty_threshold', text='Threshold')
             split = sub_box.split(factor=0.75, align=True)
             split.operator(SKW_OT_remove_empty_shape_keys.bl_idname, text='Delete')

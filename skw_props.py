@@ -109,7 +109,11 @@ class SKW_Property(bpy.types.PropertyGroup):
     )
     remove_empty_shape_keys: bpy.props.BoolProperty(
         name='Remove Empty ShapeKeys',
-        description='When enabled, removes empty shape keys from target objects',
+        description=(
+            'During transfer, scan only the shape keys created or replaced by '
+            'that transfer and remove those with no displacement from Basis. '
+            'Existing target shape keys are not scanned.'
+        ),
         default=True
     )
 

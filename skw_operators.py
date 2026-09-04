@@ -76,7 +76,12 @@ def execute_shape_key_wrap(self, context: bpy.types.Context) -> None:
     if skw.remove_empty_shape_keys:
         nullshapekeysdeleted = 0
         for obj in tgt_objs:
-            res = remove_empty_shape_keys(context, obj, skw.empty_threshold, shape_keys)
+            res = remove_empty_shape_keys(
+                context,
+                obj,
+                skw.empty_threshold,
+                created_sks[obj.name]
+            )
             nullshapekeysdeleted += res
         
         if nullshapekeysdeleted == 0:
@@ -330,7 +335,9 @@ class SKW_OT_remove_empty_shape_keys(bpy.types.Operator):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_description = (
-        'Remove empty shape keys'
+        'Remove empty non-Basis shape keys from the active object. With Use '
+        'List disabled, scans every existing non-Basis key; this action is '
+        'independent of transfer.'
     )
     bl_options = {'REGISTER', 'UNDO'}
 
