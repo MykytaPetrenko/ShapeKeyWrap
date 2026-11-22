@@ -3,6 +3,7 @@ from typing import List
 
 
 def shape_key_add_binding_driver(sk, src_obj: bpy.types.Object, src_sk_name: str) -> None:
+    source_path = f'data.shape_keys.key_blocks["{bpy.utils.escape_identifier(src_sk_name)}"]'
     f_curve = sk.driver_add('value')
     driver = f_curve.driver
     if 'skw_var' in driver.variables:
@@ -13,7 +14,7 @@ def shape_key_add_binding_driver(sk, src_obj: bpy.types.Object, src_sk_name: str
     v.name = 'skw_var'
     target = v.targets[0]
     target.id = src_obj.id_data
-    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].value'
+    target.data_path = f'{source_path}.value'
     driver.expression = 'skw_var'
 
     f_curve = sk.driver_add('slider_min')
@@ -26,7 +27,7 @@ def shape_key_add_binding_driver(sk, src_obj: bpy.types.Object, src_sk_name: str
     v.name = 'skw_var_min'
     target = v.targets[0]
     target.id = src_obj.id_data
-    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].slider_min'
+    target.data_path = f'{source_path}.slider_min'
     driver.expression = 'skw_var_min'
 
     f_curve = sk.driver_add('slider_max')
@@ -39,7 +40,7 @@ def shape_key_add_binding_driver(sk, src_obj: bpy.types.Object, src_sk_name: str
     v.name = 'skw_var_max'
     target = v.targets[0]
     target.id = src_obj.id_data
-    target.data_path = f'data.shape_keys.key_blocks["{src_sk_name}"].slider_max'
+    target.data_path = f'{source_path}.slider_max'
     driver.expression = 'skw_var_max'
 
 

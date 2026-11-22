@@ -17,6 +17,8 @@ The addon is distributed for free, but you can support the dev via [Patreon](htt
 8. Optionally enable "Corrective Smooth" to smooth the transferred or replaced shape keys after transfer.
 
 # Remove Empty Shape Keys
+If an incoming shape key has the same name as the target's reference shape (usually `Basis`), ShapeKeyWrap warns you and gives the incoming key a unique name such as `Basis (Transferred)`. The target reference keeps its name and geometry, even with overwrite enabled.
+
 The "Delete Empty Shape Keys" action in the Utils panel works on the active object and is independent of transfer. It scans every non-Basis key, or only checked keys when "Use List" is enabled.
 
 # Corrective Smooth Shape Keys

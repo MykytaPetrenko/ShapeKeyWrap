@@ -1,10 +1,12 @@
 import bpy
 import bmesh
 import math
-from typing import List
+from typing import Callable, List
 from mathutils.bvhtree import BVHTree
 from mathutils import Vector
 from mathutils.kdtree import KDTree
+from .bind_drivers import shape_key_add_binding_driver
+from .transfer_key_name import transfer_key_name
 
 
 def create_surface_binding(src_obj: bpy.types.Object, tgt_obj: bpy.types.Object):
@@ -118,50 +120,31 @@ def transfer_shapekeys(
         tgt_obj: bpy.types.Object,
         src_obj: bpy.types.Object,
         shape_keys: List[str] | None = None,
-        overwrite_shape_keys: bool = False
+        overwrite_shape_keys: bool = False,
+        create_drivers: bool = False,
+        report: Callable[[set[str], str], None] | None = None
     ) -> List[str]:
-    """
-    Transfer shape keys from source objects to target objects.
-
-    This function transfers shape key deformations from source objects to target objects.
-    It can optionally apply corrective smoothing iterations to address any problematic
-    vertex bindings.
-
-    Args:
-        context (bpy.types.Context): The current context in Blender.
-        target_objects (bpy.types.Object): A tuple of target basis and target final objects.
-        source_objects (bpy.types.Object): A tuple of source basis and source final objects.
-        basis_shape_key (str, optional): The name of the basis shape key to use. Defaults to None.
-        shape_keys (List[str], optional): A list of shape key names to transfer. Defaults to None.
-
-    Returns:
-        None
-
-    Raises:
-        Exception: If the target shape key is not found in the source object.
-        ValueError: If there is a mismatch in the number of vertices.
-    """
-    binding = create_surface_binding(src_obj, tgt_obj)
+    """Transfer deformations with the custom surface binding and return the target key names."""
     new_sks = []
+    source_keys = src_obj.data.shape_keys
+    key_blocks = source_keys.key_blocks
+    requested_keys = key_blocks[1:] if shape_keys is None else [key_blocks.get(name) for name in shape_keys]
+    keys_to_transfer = [sk for sk in requested_keys if sk is not None and sk != source_keys.reference_key]
+    if not keys_to_transfer:
+        return new_sks
 
-    if shape_keys is None:
-        # Process all shape keys
-        shape_keys = [sk.name for sk in src_obj.data.shape_keys.key_blocks[1:]]
-    
-    for sk_name in shape_keys:
-        sk = src_obj.data.shape_keys.key_blocks.get(sk_name)
-        if not sk:
-            continue
-        
+    binding = create_surface_binding(src_obj, tgt_obj)
+    source_names = set(key_blocks.keys())
+    for sk in keys_to_transfer:
         new_coordinates = calc_surface_deform(binding, [v.co for v in sk.data])
+        target_name = transfer_key_name(sk.name, source_names, tgt_obj, report)
 
         if tgt_obj.data.shape_keys is None:
             tgt_obj.shape_key_add(name="Basis", from_mix=False)
-            tgt_sk = tgt_obj.shape_key_add(name=sk_name, from_mix=False)
-        else:
-            tgt_sk = tgt_obj.data.shape_keys.key_blocks.get(sk_name)
-            if tgt_sk is None or not overwrite_shape_keys:
-                tgt_sk = tgt_obj.shape_key_add(name=sk_name, from_mix=False)
+
+        tgt_sk = tgt_obj.data.shape_keys.key_blocks.get(target_name) if overwrite_shape_keys else None
+        if tgt_sk is None:
+            tgt_sk = tgt_obj.shape_key_add(name=target_name, from_mix=False)
 
         tgt_sk.value = sk.value
         flattened_coordinates = [value for co in new_coordinates for value in co[:]]
@@ -171,5 +154,7 @@ def transfer_shapekeys(
         else:
             raise ValueError("Mismatch in the number of vertices.")
 
+        if create_drivers:
+            shape_key_add_binding_driver(sk=tgt_sk, src_obj=src_obj, src_sk_name=sk.name)
         new_sks.append(tgt_sk.name)
     return new_sks
